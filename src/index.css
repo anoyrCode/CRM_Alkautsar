@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+@custom-variant xs (@media (width >= 410px));
+@custom-variant xs2 (@media (width >= 555px));
+@custom-variant 3xl (@media (width >= 1920px));
