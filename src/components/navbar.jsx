@@ -14,7 +14,7 @@ function Navbar(){
 
 
 
-    const username = 'Ryan';
+    const username = 'muslim';
     const userProfile = username[0];
 
 
@@ -39,12 +39,12 @@ function Navbar(){
 
     return (
         <nav className="bg-white p-3.5 flex justify-between shadow-lg shadow-gray-">
-            <div id='right-nav' className='flex gap-4 items-center'>
+            <div id='left-nav' className='flex gap-4 items-center'>
                 <Menu className='cursor-pointer'/>
                 <span id='bread' className='text-xl font-semibold text-[#0A1628]'>{breadText()}</span>
             </div>
-            <div id='left-nav' className='flex items-center gap-4'>
-                <div className='bg-gradient-to-r from-[#0A1628] to-[#1B2B4A] px-2 rounded-4xl flex items-center'> <span className='text-xl text-white'>{userProfile}</span></div>
+            <div id='right-nav' className='flex items-center gap-4'>
+                <div className='bg-gradient-to-r from-[#0A1628] to-[#1B2B4A] px-3 rounded-4xl flex items-center'> <span className='text-xl text-white'>{userProfile}</span></div>
             </div>
         </nav>
     )

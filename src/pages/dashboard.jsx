@@ -1,12 +1,12 @@
 import { UserStar,PartyPopper,MessageSquareText,CircleCheckBig,Clock,CircleAlert,ChartColumn } from "lucide-react"
-
+import StatisticChart from "../components/chart";
 
 function Dashboard(){
     const dashboard_tittle = "dashboard"
     const username = "muslim";
 
     const totalVal = 0
-    const clearVal = 90
+    const clearVal = 0
     const proccesVal = 0
     const pendingVal = 0
 
@@ -77,19 +77,26 @@ function Dashboard(){
             <div id="mid-hero" className="mt-5">
                 <section id="statistik-komplain" className="bg-white shadow-lg shadow-gray-400 rounded-xl">
                     <div id="statistik-komplain-container" className="px-5 py-4 flex flex-col gap-4">
-                    <div id="dhc-p1" className="flex gap-2 text-[#c3a339] font-semibold text-sm items-center">
-                        <ChartColumn className="w-5" />
-                        <span className="text-lg text-[#0A1628] font-bold">Statistik Komplain</span>
+                        <div id="sk-header" className="flex gap-2 text-[#c3a339] font-semibold text-sm items-center">
+                            <ChartColumn className="w-5" />
+                            <span className="text-lg text-[#0A1628] font-bold">Statistik Komplain Terbanyak</span>
+                        </div>
+
+                        <div id="statistik-komplain-card-container">
+                            <div id="skc-p1">
+                                <div id="skc-p1-header">
+                                    <span id="skc-p1-title"></span>
+                                    <span id="skc-p1-title"></span>
+                                </div>
+
+                                <div id="skc-p1-val">
+                                    <StatisticChart/>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div id="dhc-p2" className="text-3xl text-white font-bold">
-                        <span>Selamat datang, {username} <PartyPopper className="inline w-7 mb-2"/></span> 
-                    </div>
-
-                    <div id="dhc-p3" className="text-white/70">
-                        <span>Berikut pembaruan rekaptulasi komplain saat ini</span>
-                    </div>
-                </div>
                 </section>
 
                 <section id="recent-activity">
