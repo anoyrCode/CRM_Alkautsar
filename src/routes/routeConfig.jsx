@@ -10,16 +10,18 @@ import Role from "../pages/role"
 function RouteConfig(){
     return (
         <Routes>
+            <Route path="/Dashboard" element={<Dashboard/>}/>
             <Route path="/" element={<Dashboard/>}/>
-            <Route path="/category" element={<Category/>}/>
-            <Route path="/complaintData" element={<CompliantData/>}/>
-            <Route path="/createComplaint" element={<CreateComplaint/>}/>
-            <Route path="/myComplaint" element={<MyComplaint/>}/>
-            <Route path="/users" element={<Users/>}/>
-            <Route path="/role" element={<Role/>}/>
+            <Route path="/Kategori" element={<Category/>}/>
+            <Route path="/Data Komplain" element={<CompliantData/>}/>
+            <Route path="/Buat Laporan" element={<CreateComplaint/>}/>
+            <Route path="/Laporan Saya" element={<MyComplaint/>}/>
+            <Route path="/Users" element={<Users/>}/>
+            <Route path="/Role" element={<Role/>}/>
         </Routes>
 
     )
 }
+
 
 export default RouteConfig

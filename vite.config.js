@@ -11,7 +11,7 @@ export default defineConfig({
   server : {
     host : true,
     allowedHosts : [
-      'drolly-preenjoyable-delana.ngrok-free.dev'
+      'nonincreasable-jaxen-solenoidal.ngrok-free.dev'
     ]
   }
 })
