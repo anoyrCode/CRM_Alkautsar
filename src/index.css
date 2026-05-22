@@ -3,3 +3,16 @@
 @custom-variant xs (@media (width >= 410px));
 @custom-variant xs2 (@media (width >= 555px));
 @custom-variant 3xl (@media (width >= 1920px));
+
+@theme {
+  --color-sky-50:  #edfafd;
+  --color-sky-100: #d6f4fb;
+  --color-sky-200: #a5e9f5;
+  --color-sky-300: #67d2ec;
+  --color-sky-400: #34c6e8;
+  --color-sky-500: #00aad4;
+  --color-sky-600: #0092b7;
+  --color-sky-700: #007a9a;
+  --color-sky-800: #00627d;
+  --color-sky-900: #004a60;
+}

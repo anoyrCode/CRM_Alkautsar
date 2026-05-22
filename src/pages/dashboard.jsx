@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   UserStar, MessageSquareText, CircleCheckBig, Clock, CircleAlert,
   ChartSpline, ChartColumn, ClipboardPlus, MessageSquare, Download, Headset, Zap
@@ -8,25 +9,83 @@ import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
 import StatisticChart from '../components/statisticChart'
 import PerformChart from '../components/performChart'
-
-const username = '[testing-user]'
-
-const STATS = [
-  { label: 'Total Komplain', value: 0, delta: '+0 hari ini', deltaColor: 'text-sky-600', icon: MessageSquareText, iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
-  { label: 'Selesai', value: 0, delta: '+0 hari ini', deltaColor: 'text-emerald-600', icon: CircleCheckBig, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-  { label: 'Diproses', value: 0, delta: 'Tidak ada perubahan', deltaColor: 'text-slate-400', icon: Clock, iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
-  { label: 'Pending', value: 0, delta: '+0 hari ini', deltaColor: 'text-red-500', icon: CircleAlert, iconBg: 'bg-red-100', iconColor: 'text-red-500' },
-]
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 const QUICK_ACTIONS = [
   { label: 'Buat Laporan', icon: ClipboardPlus, to: '/Buat Laporan' },
   { label: 'Lihat Status', icon: MessageSquare, to: '/Data Komplain' },
-  { label: 'Unduh Laporan', icon: Download, to: '#' },
-  { label: 'Hubungi CS', icon: Headset, to: '#' },
+  { label: 'Unduh Laporan', icon: Download,      to: '#' },
+  { label: 'Hubungi CS',   icon: Headset,        to: '#' },
 ]
 
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
+
 function Dashboard() {
-  const navigate = useNavigate()
+  const { profile } = useAuth()
+  const navigate    = useNavigate()
+
+  const [stats, setStats] = useState({ total: 0, selesai: 0, diproses: 0, pending: 0 })
+  const [pieData,  setPieData]  = useState({ labels: [], values: [] })
+  const [barData,  setBarData]  = useState({ labels: [], selesai: [], belumSelesai: [] })
+  const [fetching, setFetching] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setFetching(true)
+
+      const { data: complaints } = await supabase
+        .from('complaints')
+        .select('status, created_at, categories(name)')
+
+      if (!complaints) { setFetching(false); return }
+
+      // Stats
+      const total    = complaints.length
+      const selesai  = complaints.filter(c => c.status === 'Selesai').length
+      const diproses = complaints.filter(c => c.status === 'Diproses').length
+      const pending  = complaints.filter(c => c.status === 'Pending').length
+      setStats({ total, selesai, diproses, pending })
+
+      // Pie — per kategori
+      const catMap = {}
+      complaints.forEach(c => {
+        const name = c.categories?.name ?? 'Lainnya'
+        catMap[name] = (catMap[name] ?? 0) + 1
+      })
+      setPieData({ labels: Object.keys(catMap), values: Object.values(catMap) })
+
+      // Bar — 6 bulan terakhir
+      const now     = new Date()
+      const months  = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1)
+        return { year: d.getFullYear(), month: d.getMonth(), label: MONTH_NAMES[d.getMonth()] }
+      })
+
+      const barSelesai      = months.map(m => complaints.filter(c => {
+        const d = new Date(c.created_at)
+        return d.getFullYear() === m.year && d.getMonth() === m.month && c.status === 'Selesai'
+      }).length)
+
+      const barBelumSelesai = months.map(m => complaints.filter(c => {
+        const d = new Date(c.created_at)
+        return d.getFullYear() === m.year && d.getMonth() === m.month && c.status !== 'Selesai'
+      }).length)
+
+      setBarData({ labels: months.map(m => m.label), selesai: barSelesai, belumSelesai: barBelumSelesai })
+      setFetching(false)
+    }
+
+    fetchDashboard()
+  }, [])
+
+  const STATS = [
+    { label: 'Total Komplain', value: stats.total,    delta: `${stats.total} komplain`,     deltaColor: 'text-sky-600',     icon: MessageSquareText, iconBg: 'bg-sky-100',     iconColor: 'text-sky-600' },
+    { label: 'Selesai',        value: stats.selesai,  delta: `${stats.selesai} selesai`,    deltaColor: 'text-emerald-600', icon: CircleCheckBig,    iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+    { label: 'Diproses',       value: stats.diproses, delta: `${stats.diproses} diproses`,  deltaColor: 'text-slate-400',   icon: Clock,             iconBg: 'bg-amber-100',   iconColor: 'text-amber-600' },
+    { label: 'Pending',        value: stats.pending,  delta: `${stats.pending} pending`,    deltaColor: 'text-red-500',     icon: CircleAlert,       iconBg: 'bg-red-100',     iconColor: 'text-red-500' },
+  ]
+
   return (
     <motion.div
       className="p-5 flex flex-col gap-4"
@@ -35,9 +94,9 @@ function Dashboard() {
       transition={{ duration: 0.4 }}
     >
       <PageHeader
-        title={`Selamat datang, ${username} 🎉`}
+        title={`Selamat datang, ${profile?.full_name ?? '...'} 🎉`}
         subtitle="Berikut pembaruan rekapitulasi komplain saat ini"
-        badge="Administrator"
+        badge={profile?.roles?.name ?? 'User'}
         badgeIcon={UserStar}
       />
 
@@ -51,14 +110,24 @@ function Dashboard() {
             <ChartSpline className="w-4 h-4 text-sky-600" />
             <span className="text-sm font-bold text-slate-800">Kinerja Penanganan Komplain</span>
           </div>
-          <div className="h-48 md:h-64"><PerformChart /></div>
+          <div className="h-48 md:h-64">
+            {fetching
+              ? <div className="h-full flex items-center justify-center text-slate-400 text-sm">Memuat...</div>
+              : <PerformChart labels={barData.labels} selesai={barData.selesai} belumSelesai={barData.belumSelesai} />
+            }
+          </div>
         </div>
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <ChartColumn className="w-4 h-4 text-sky-600" />
             <span className="text-sm font-bold text-slate-800">Statistik Per Kategori</span>
           </div>
-          <div className="h-48 md:h-64"><StatisticChart /></div>
+          <div className="h-48 md:h-64">
+            {fetching
+              ? <div className="h-full flex items-center justify-center text-slate-400 text-sm">Memuat...</div>
+              : <StatisticChart labels={pieData.labels} values={pieData.values} />
+            }
+          </div>
         </div>
       </div>
 

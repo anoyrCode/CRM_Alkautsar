@@ -1,33 +1,16 @@
 import { Bar } from 'react-chartjs-2'
-import {
-  Chart as Chartjs,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Tooltip,
-  Legend,
-} from 'chart.js/auto'
+import { Chart as Chartjs, BarElement, CategoryScale, LinearScale, Tooltip, Legend } from 'chart.js/auto'
 
 Chartjs.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend)
 
 const options = { responsive: true, maintainAspectRatio: false }
 
-function PerformChart() {
+function PerformChart({ labels = [], selesai = [], belumSelesai = [] }) {
   const data = {
-    labels: ['Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'],
+    labels,
     datasets: [
-      {
-        label: 'Belum Selesai',
-        data: [1, 2, 3, 1, 3, 5],
-        backgroundColor: '#fca5a5',
-        borderRadius: 4,
-      },
-      {
-        label: 'Terselesaikan',
-        data: [3, 2, 3, 2, 4, 1],
-        backgroundColor: '#7dd3fc',
-        borderRadius: 4,
-      },
+      { label: 'Belum Selesai', data: belumSelesai, backgroundColor: '#fca5a5', borderRadius: 4 },
+      { label: 'Terselesaikan', data: selesai,      backgroundColor: '#7dd3fc', borderRadius: 4 },
     ],
   }
   return <Bar key={JSON.stringify(data)} data={data} options={options} />

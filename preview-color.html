@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview Warna — CRM Al-Kautsar</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+    body { background: #f8fafc; padding: 32px; display: flex; gap: 32px; }
+
+    .col { flex: 1; display: flex; flex-direction: column; gap: 16px; }
+    .col-label { font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+
+    /* ---- CURRENT (sky) ---- */
+    .old-primary     { background: #0284c7; }
+    .old-primary-h   { background: #0369a1; }
+    .old-light       { background: #e0f2fe; }
+    .old-text        { color: #0284c7; }
+    .old-border      { border-color: #7dd3fc; }
+
+    /* ---- NEW (#0092B7) ---- */
+    .new-primary     { background: #0092B7; }
+    .new-primary-h   { background: #007a9a; }  /* ~10% lebih gelap untuk hover */
+    .new-light       { background: #e0f5fb; }   /* light bg turunan */
+    .new-text        { color: #0092B7; }
+    .new-border      { border-color: #67d2ec; }
+
+    /* Shared card styles */
+    .card { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08); display: flex; flex-direction: column; gap: 12px; }
+    .card-title { font-size: 11px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; }
+
+    /* Button */
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #fff; border: none; cursor: pointer; }
+
+    /* Nav item active */
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; }
+
+    /* Badge */
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+
+    /* Stat card */
+    .stat { display: flex; justify-content: space-between; align-items: flex-start; }
+    .stat-val { font-size: 24px; font-weight: 800; color: #1e293b; }
+    .stat-lbl { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+    .stat-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+
+    /* Page header */
+    .page-header { border-radius: 12px; padding: 20px 24px; color: #fff; }
+    .page-header h1 { font-size: 22px; font-weight: 800; }
+    .page-header p { font-size: 13px; opacity: .8; margin-top: 4px; }
+    .header-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.2); border-radius: 999px; padding: 4px 12px; font-size: 11px; font-weight: 600; margin-bottom: 10px; }
+
+    /* Input focus ring */
+    .input-demo { border: 1.5px solid; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #475569; background: #f8fafc; width: 100%; outline: none; }
+
+    /* Sidebar strip */
+    .sidebar { background: #fff; border-right: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-inactive { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; font-size: 13px; color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <!-- COLUMN 1: CURRENT -->
+  <div class="col">
+    <div class="col-label">Sekarang — Sky Blue (#0284c7)</div>
+
+    <!-- Header gradient -->
+    <div class="page-header" style="background: linear-gradient(to right, #0369a1, #38bdf8)">
+      <div class="header-badge">⭐ Admin Only</div>
+      <h1>Data Komplain</h1>
+      <p>Berikut pembaruan komplain terdaftar</p>
+    </div>
+
+    <!-- Buttons -->
+    <div class="card">
+      <div class="card-title">Tombol</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn old-primary">Tambah User</button>
+        <button class="btn" style="background:#fff;border:1.5px solid #e2e8f0;color:#475569">Upload</button>
+      </div>
+    </div>
+
+    <!-- Stat card -->
+    <div class="card">
+      <div class="card-title">Stat Card</div>
+      <div class="stat">
+        <div>
+          <div class="stat-val">128</div>
+          <div class="stat-lbl">Total Komplain</div>
+          <div style="margin-top:6px;font-size:11px;font-weight:600;color:#0284c7">+12 hari ini</div>
+        </div>
+        <div class="stat-icon old-light"><span style="color:#0284c7">📋</span></div>
+      </div>
+    </div>
+
+    <!-- Sidebar nav -->
+    <div class="card">
+      <div class="card-title">Sidebar Nav</div>
+      <div class="sidebar">
+        <div class="nav-item old-light old-text">📊 Dashboard</div>
+        <div class="sidebar-inactive">📝 Buat Laporan</div>
+        <div class="sidebar-inactive">🗂️ Data Komplain</div>
+      </div>
+    </div>
+
+    <!-- Badge & input -->
+    <div class="card">
+      <div class="card-title">Badge & Input</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="badge old-light old-text">SuperAdmin</span>
+        <span class="badge old-light old-text">Admin</span>
+        <span class="badge" style="background:#f1f5f9;color:#64748b">User</span>
+      </div>
+      <input class="input-demo old-border" style="border-color:#7dd3fc;box-shadow:0 0 0 3px #bae6fd33" placeholder="Cari data..." />
+    </div>
+  </div>
+
+  <!-- COLUMN 2: NEW -->
+  <div class="col">
+    <div class="col-label">Baru — #0092B7</div>
+
+    <!-- Header gradient -->
+    <div class="page-header" style="background: linear-gradient(to right, #007a9a, #34c6e8)">
+      <div class="header-badge">⭐ Admin Only</div>
+      <h1>Data Komplain</h1>
+      <p>Berikut pembaruan komplain terdaftar</p>
+    </div>
+
+    <!-- Buttons -->
+    <div class="card">
+      <div class="card-title">Tombol</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn new-primary">Tambah User</button>
+        <button class="btn" style="background:#fff;border:1.5px solid #e2e8f0;color:#475569">Upload</button>
+      </div>
+    </div>
+
+    <!-- Stat card -->
+    <div class="card">
+      <div class="card-title">Stat Card</div>
+      <div class="stat">
+        <div>
+          <div class="stat-val">128</div>
+          <div class="stat-lbl">Total Komplain</div>
+          <div style="margin-top:6px;font-size:11px;font-weight:600;color:#0092B7">+12 hari ini</div>
+        </div>
+        <div class="stat-icon new-light"><span style="color:#0092B7">📋</span></div>
+      </div>
+    </div>
+
+    <!-- Sidebar nav -->
+    <div class="card">
+      <div class="card-title">Sidebar Nav</div>
+      <div class="sidebar">
+        <div class="nav-item new-light new-text">📊 Dashboard</div>
+        <div class="sidebar-inactive">📝 Buat Laporan</div>
+        <div class="sidebar-inactive">🗂️ Data Komplain</div>
+      </div>
+    </div>
+
+    <!-- Badge & input -->
+    <div class="card">
+      <div class="card-title">Badge & Input</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="badge new-light new-text">SuperAdmin</span>
+        <span class="badge new-light new-text">Admin</span>
+        <span class="badge" style="background:#f1f5f9;color:#64748b">User</span>
+      </div>
+      <input class="input-demo" style="border-color:#67d2ec;box-shadow:0 0 0 3px #a5e9f533" placeholder="Cari data..." />
+    </div>
+  </div>
+
+</body>
+</html>

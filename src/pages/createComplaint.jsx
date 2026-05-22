@@ -1,11 +1,21 @@
 import {
   User, Mail, ChartBarStacked, CircleGauge, ReceiptText, Link2, Send
 } from 'lucide-react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
+import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 const inputClass = 'w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all duration-150'
+
+const PRIORITY_OPTIONS = [
+  { value: 'Low',      label: 'Low — Rendah' },
+  { value: 'Medium',   label: 'Medium — Sedang' },
+  { value: 'High',     label: 'High — Tinggi' },
+  { value: 'Critical', label: 'Critical — Kritis' },
+]
 
 function FormSection({ icon: Icon, title }) {
   return (
@@ -16,8 +26,7 @@ function FormSection({ icon: Icon, title }) {
   )
 }
 
-function DokumenPendukung() {
-  const [files, setFiles] = useState([])
+function DokumenPendukung({ files, setFiles }) {
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef(null)
 
@@ -27,8 +36,8 @@ function DokumenPendukung() {
     return (bytes / 1048576).toFixed(1) + ' MB'
   }
 
-  const addFiles = newFiles => setFiles(prev => [...prev, ...Array.from(newFiles)])
-  const removeFile = index => setFiles(prev => prev.filter((_, i) => i !== index))
+  const addFiles   = newFiles => setFiles(prev => [...prev, ...Array.from(newFiles)])
+  const removeFile = index   => setFiles(prev => prev.filter((_, i) => i !== index))
 
   return (
     <div className="flex flex-col gap-3">
@@ -74,8 +83,71 @@ function DokumenPendukung() {
 }
 
 function CreateComplaint() {
-  const username = 'testing-user'
-  const emailUser = 'usertesting@gmail.com'
+  const { profile } = useAuth()
+  const navigate    = useNavigate()
+
+  const [categories, setCategories] = useState([])
+  const [categoryId, setCategoryId] = useState('')
+  const [priority,   setPriority]   = useState('')
+  const [detail,     setDetail]     = useState('')
+  const [files,      setFiles]      = useState([])
+  const [submitting, setSubmitting] = useState(false)
+  const [error,      setError]      = useState('')
+
+  useEffect(() => {
+    supabase.from('categories').select('id, name').order('name').then(({ data }) => setCategories(data ?? []))
+  }, [])
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    if (!categoryId || !priority || detail.trim().length < 20) {
+      setError('Lengkapi semua field. Deskripsi minimal 20 karakter.')
+      return
+    }
+
+    setSubmitting(true)
+    setError('')
+
+    const { data: complaint, error: cErr } = await supabase
+      .from('complaints')
+      .insert({
+        reporter_id:  profile.id,
+        category_id:  categoryId,
+        priority,
+        description:  detail.trim(),
+        status:       'Pending',
+      })
+      .select('id')
+      .single()
+
+    if (cErr) { setError(cErr.message); setSubmitting(false); return }
+
+    // Upload attachments jika ada
+    for (const file of files) {
+      const ext      = file.name.split('.').pop()
+      const filePath = `${complaint.id}/${Date.now()}.${ext}`
+
+      const { data: uploaded, error: upErr } = await supabase.storage
+        .from('complaint-attachments')
+        .upload(filePath, file)
+
+      if (!upErr && uploaded) {
+        const { data: { publicUrl } } = supabase.storage
+          .from('complaint-attachments')
+          .getPublicUrl(filePath)
+
+        await supabase.from('complaint_attachments').insert({
+          complaint_id: complaint.id,
+          file_name:    file.name,
+          file_url:     publicUrl,
+          file_size:    file.size,
+        })
+      }
+    }
+
+    setSubmitting(false)
+    navigate('/Laporan Saya')
+  }
 
   return (
     <motion.div
@@ -86,7 +158,10 @@ function CreateComplaint() {
     >
       <PageHeader title="Form Komplain" subtitle="Laporkan masalah Anda dengan jelas dan lengkap" />
       <div className="bg-white rounded-xl shadow-sm p-5">
-        <form className="flex flex-col gap-8">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-4 py-2.5 mb-4">{error}</div>
+        )}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <FormSection icon={User} title="Informasi Pelapor" />
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -95,14 +170,14 @@ function CreateComplaint() {
                   <User className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs font-semibold text-slate-500">Nama Lengkap</span>
                 </label>
-                <input type="text" className={inputClass} defaultValue={username} readOnly />
+                <input type="text" className={`${inputClass} bg-slate-100 cursor-not-allowed`} value={profile?.full_name ?? ''} readOnly />
               </div>
               <div>
                 <label className="flex items-center gap-1.5 mb-1.5">
                   <Mail className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs font-semibold text-slate-500">Email</span>
                 </label>
-                <input type="email" className={inputClass} defaultValue={emailUser} readOnly />
+                <input type="email" className={`${inputClass} bg-slate-100 cursor-not-allowed`} value={profile?.email ?? ''} readOnly />
               </div>
             </div>
           </div>
@@ -115,16 +190,9 @@ function CreateComplaint() {
                   <ChartBarStacked className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs font-semibold text-slate-500">Kategori</span>
                 </label>
-                <select className={`${inputClass} cursor-pointer appearance-none`}>
+                <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={`${inputClass} cursor-pointer appearance-none`}>
                   <option value="">Pilih kategori komplain</option>
-                  <option>Akademik</option>
-                  <option>Peraturan dan Kedisiplinan</option>
-                  <option>Pelayanan</option>
-                  <option>Fasilitas</option>
-                  <option>Administrasi</option>
-                  <option>Keamanan</option>
-                  <option>Konsumsi</option>
-                  <option>Kantin</option>
+                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
@@ -132,12 +200,9 @@ function CreateComplaint() {
                   <CircleGauge className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-xs font-semibold text-slate-500">Priority Level</span>
                 </label>
-                <select className={`${inputClass} cursor-pointer appearance-none`}>
+                <select value={priority} onChange={e => setPriority(e.target.value)} className={`${inputClass} cursor-pointer appearance-none`}>
                   <option value="">Pilih level prioritas</option>
-                  <option>Low — Rendah</option>
-                  <option>Medium — Sedang</option>
-                  <option>High — Tinggi</option>
-                  <option>Critical — Kritis</option>
+                  {PRIORITY_OPTIONS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                 </select>
               </div>
             </div>
@@ -146,20 +211,27 @@ function CreateComplaint() {
           <div className="flex flex-col gap-4">
             <FormSection icon={ReceiptText} title="Detail Komplain" />
             <textarea
+              value={detail}
+              onChange={e => setDetail(e.target.value)}
               rows={6}
               placeholder="Jelaskan masalah Anda secara detail... (minimal 20 karakter)"
               className={`${inputClass} resize-none`}
             />
           </div>
 
-          <DokumenPendukung />
+          <DokumenPendukung files={files} setFiles={setFiles} />
 
           <button
             type="submit"
-            className="w-full bg-linear-to-r from-sky-700 to-sky-400 text-white py-3.5 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2"
+            disabled={submitting}
+            className="w-full bg-linear-to-r from-sky-700 to-sky-400 text-white py-3.5 rounded-xl font-bold text-sm hover:shadow-lg transition-all duration-200 active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <Send className="w-4 h-4" />
-            Kirim Komplain
+            {submitting ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+            {submitting ? 'Mengirim...' : 'Kirim Komplain'}
           </button>
         </form>
       </div>
