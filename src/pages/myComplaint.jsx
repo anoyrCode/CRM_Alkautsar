@@ -1,197 +1,100 @@
-import { 
-    UserStar,
-    PartyPopper,
-    MessageSquareText,
-    CircleCheckBig,
-    Clock,
-    CircleAlert,
-    ChartColumn,
-    ChartSpline,
-    ClipboardPlus,
-    MessageSquare,
-    Download,
-    Headset,
-    Gift,
-    Search,
-    Eye
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye } from 'lucide-react'
+import { motion } from 'framer-motion'
+import StatCard from '../components/StatCard'
+import PageHeader from '../components/PageHeader'
+import SearchFilterBar from '../components/SearchFilterBar'
+import DataTable from '../components/DataTable'
 
-} from "lucide-react"
+const STATS = [
+  { label: 'Total Komplain', value: 0, delta: '+0 hari ini', deltaColor: 'text-sky-600', icon: MessageSquareText, iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
+  { label: 'Selesai', value: 0, delta: '+0 hari ini', deltaColor: 'text-emerald-600', icon: CircleCheckBig, iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
+  { label: 'Diproses', value: 0, delta: 'Tidak ada perubahan', deltaColor: 'text-slate-400', icon: Clock, iconBg: 'bg-amber-100', iconColor: 'text-amber-600' },
+  { label: 'Pending', value: 0, delta: '+0 hari ini', deltaColor: 'text-red-500', icon: CircleAlert, iconBg: 'bg-red-100', iconColor: 'text-red-500' },
+]
 
-import { useState } from "react";
+const STATUS_STYLES = {
+  Selesai: { bg: 'bg-emerald-100 text-emerald-700', icon: CircleCheckBig },
+  Diproses: { bg: 'bg-amber-100 text-amber-700', icon: Clock },
+  Pending: { bg: 'bg-red-100 text-red-700', icon: CircleAlert },
+}
 
+const PRIORITY_STYLES = {
+  High: 'bg-red-100 text-red-700',
+  Medium: 'bg-amber-100 text-amber-700',
+  Low: 'bg-emerald-100 text-emerald-700',
+  Critical: 'bg-purple-100 text-purple-700',
+}
 
-function MyComplaint(){
-    const dashboard_tittle = "dashboard"
-    const username = "muslim";
+function StatusBadge({ status }) {
+  const s = STATUS_STYLES[status] ?? { bg: 'bg-slate-100 text-slate-600', icon: CircleAlert }
+  const Icon = s.icon
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${s.bg}`}>
+      <Icon className="w-3 h-3" />{status}
+    </span>
+  )
+}
 
-    const totalVal = 0
-    const clearVal = 0
-    const proccesVal = 0
-    const pendingVal = 0
+function PriorityBadge({ priority }) {
+  return (
+    <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${PRIORITY_STYLES[priority] ?? 'bg-slate-100 text-slate-600'}`}>
+      {priority}
+    </span>
+  )
+}
 
-    const totalAddNew = 0
-    const clearAddNew = 0
-    const prosesAddNew = 0
-    const pendingAddNew = 0
+const SAMPLE_DATA = [
+  { id: 'CMP-2026-001', judul: 'Makanan sering dijumpai tanpa lauk...', pelapor: 'testing-user', kategori: 'Konsumsi', status: 'Pending', prioritas: 'High', tanggal: '02 Jun 2026' },
+  { id: 'CMP-2026-002', judul: 'Pelayanannya tidak buruk dan...', pelapor: 'testing-user', kategori: 'Pelayanan', status: 'Diproses', prioritas: 'Medium', tanggal: '05 Jun 2026' },
+]
 
-    return (
-        <div className="p-5.5 xl:ml-70 xl:mt-14">
-            <div id="komplain-saya-hero" className="bg-gradient-to-r from-[#0A1628] to-[#1B2B4A] rounded-xl">
-                <div id="komplain-saya-hero-container" className="px-5 py-4 flex flex-col gap-4">
-                    <div id="dhc-p1" className="text-3xl text-white font-bold">
-                        <span>Laporan Saya</span> 
-                    </div>
+const COLUMNS = [
+  { key: 'id', label: 'ID Tiket', render: v => <span className="font-semibold text-sky-600">{v}</span> },
+  { key: 'judul', label: 'Judul' },
+  { key: 'pelapor', label: 'Pelapor' },
+  { key: 'kategori', label: 'Kategori', render: v => <span className="bg-sky-50 text-sky-700 px-2 py-0.5 rounded-full text-xs font-medium">{v}</span> },
+  { key: 'status', label: 'Status', render: v => <StatusBadge status={v} /> },
+  { key: 'prioritas', label: 'Prioritas', render: v => <PriorityBadge priority={v} /> },
+  { key: 'tanggal', label: 'Tanggal', render: v => <span className="text-slate-400">{v}</span> },
+  { key: 'aksi', label: 'Aksi', render: () => (
+    <button className="w-7 h-7 bg-sky-50 hover:bg-sky-100 rounded-lg flex items-center justify-center transition-colors">
+      <Eye className="w-3.5 h-3.5 text-sky-600" />
+    </button>
+  )},
+]
 
-                    <div id="dhc-p2" className="text-white/70">
-                        <span>Berikut pembaruan rekaptulasi komplain saat ini</span>
-                    </div>
-                </div>
-            </div>
+const FILTERS = [
+  { name: 'status', options: [
+    { value: '', label: 'Semua Status' },
+    { value: 'Selesai', label: 'Selesai' },
+    { value: 'Diproses', label: 'Diproses' },
+    { value: 'Pending', label: 'Pending' },
+  ]},
+  { name: 'kategori', options: [
+    { value: '', label: 'Semua Kategori' },
+    { value: 'Pelayanan', label: 'Pelayanan' },
+    { value: 'Konsumsi', label: 'Konsumsi' },
+    { value: 'Fasilitas', label: 'Fasilitas' },
+    { value: 'Administrasi', label: 'Administrasi' },
+  ]},
+]
 
-            <div id="komplain-saya-total" className="mt-5 flex flex-wrap gap-2.5 justify-center w-full md:gap-3">
-                <section id="dt-card-1" className="bg-white shadow-md shadow-gray-300 rounded-2xl relative w-40 xs:w-45 sm:flex-1">
-                    <div id="dtc-1-container" className="flex flex-col px-5 py-3 gap-2">
-                        <div id="header" className="flex justify-between items-center">
-                            <MessageSquare className="text-amber-500 w-5"/>
-                            <div id="count" className="font-bold text-2xl">{totalVal}</div>
-                        </div>
-                        <p className="opacity-60 text-sm">Total Komplain</p>
-                    </div>
-                </section>
-                <section id="dt-card-2" className="bg-white shadow-md shadow-gray-300 rounded-2xl relative w-40 xs:w-45 sm:flex-1">
-                    <div id="dtc-2-container" className="flex flex-col px-5 py-3 gap-2">
-                        <div id="header" className="flex justify-between items-center">
-                            <CircleCheckBig className="text-green-500 w-5"/>
-                            <div id="count" className="font-bold text-2xl">{totalVal}</div>
-                        </div>
-                        <p className="opacity-60 text-sm">Selesai</p>
-                    </div>
-                </section>
-                <section id="dt-card-3" className="bg-white shadow-md shadow-gray-300 rounded-2xl relative w-40 xs:w-45 sm:flex-1">
-                    <div id="dtc-3-container" className="flex flex-col px-5 py-3 gap-2">
-                        <div id="header" className="flex justify-between items-center">
-                            <Clock className="text-blue-500 w-5"/>
-                            <div id="count" className="font-bold text-2xl">{totalVal}</div>
-                        </div>
-                        <p className="opacity-60 text-sm">Diproses</p>
-                    </div>
-                </section>
-                <section id="dt-card-4" className="bg-white shadow-md shadow-gray-300 rounded-2xl relative w-40 xs:w-45 sm:flex-1">
-                    <div id="dtc-4-container" className="flex flex-col px-5 py-3 gap-2">
-                        <div id="header" className="flex justify-between items-center">
-                            <CircleAlert className="text-amber-500 w-5"/>
-                            <div id="count" className="font-bold text-2xl">{totalVal}</div>
-                        </div>
-                        <p className="opacity-60 text-sm">Pending</p>
-                    </div>
-                </section>
-            </div>
-
-            <div id="search" className="bg-white shadow-sm shadow-gray-300 mt-5 rounded-xl p-3 mb-3">
-                <form action="" className="flex gap-3 flex-col md:flex-row">
-                    <div id="search-page" className="px-3 py-1 bg-white border-1 border-gray-300 rounded-lg focus:outline-none focus:border-[#D4AF37] transition-all duration-200 flex gap-2 flex-3">
-                        <Search className="opacity-50 w-4"/>
-                        <input type="text" className="outline-0 text-sm w-full" placeholder="Cari berdasarkan ID, Judul, atau Nama Pelapor"/>
-                    </div>
-
-                    <div className="search-filter flex flex-2 w-full gap-3">
-                        <select name="" id="" className="px-3 py-1 bg-white border-1 border-gray-300 rounded-lg focus:outline-none focus:border-[#D4AF37] transition-all duration-200 cursor-pointer text-sm opacity-65 flex-1">
-                            <option value>semua status</option>
-                            <option value="">konsumsi</option>
-                            <option value="">pelayanan</option>
-                            <option value="">kesantrian</option>
-                            <option value="">administrasi</option>
-                        </select>
-
-                        <select name="" id="" className="px-3 py-1 bg-white border-1 border-gray-300 rounded-lg focus:outline-none focus:border-[#D4AF37] transition-all duration-200  cursor-pointer text-sm opacity-65 flex-1">
-                            <option value>semua kategori</option>
-                            <option value="">konsumsi</option>
-                            <option value="">pelayanan</option>
-                            <option value="">kesantrian</option>
-                            <option value="">administrasi</option>
-                        </select>
-                    </div>
-                </form>
-            </div>
-
-            <div id="komplain-saya-tabel" className="bg-white mt-3 p-3 w-full overflow-x-auto rounded-xl">
-                <table className="min-w-[500px] w-full ">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">ID Tiket</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Judul</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Pelapor</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Kategori</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Status</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Prioritas</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Tanggal</th>
-                            <th className="px-6 py-2 text-left text-xs opacity-70 font-medium">Aksi</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        <tr className="hover:bg-gray-50 border-b-1 border-gray-200">
-                            <td className="px-6 py-2 text-sm font-semibold">CMP-2026-001</td>
-                            <td className="px-6 py-2 text-sm">Pelayanannya tidak buruk dan....</td>
-                            <td className="px-6 py-2 text-sm">ahmad yani</td>
-                            <td className="px-6 py-2 text-sm">Pelayanan</td>
-                            <td className="px-6 py-2 text-xs">
-                                <button className="cursor-pointer flex gap-1 items-center bg-green-200 px-2 rounded-lg">
-                                    <CircleCheckBig className="w-3 text-green-600"/>
-                                    <span className="font-semibold text-green-900">Selesai</span>
-                                </button>
-                            </td>
-                            <td className="px-6 py-2 text-xs">
-                                <p className="flex gap-1 items-center justify-center bg-red-200 px-2 p-1 rounded-lg">
-                                    <span className="font-semibold text-red-900">High</span>
-                                </p>
-                            </td>
-                            <td className="px-6 py-2 text-sm">02-06-2006</td>
-                            <td className="px-6 py-2 text-sm"><button className="cursor-pointer"><Eye className="w-5 opacity-60" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-gray-50 border-b-1 border-gray-200">
-                            <td className="px-6 py-2 text-sm font-semibold">CMP-2026-001</td>
-                            <td className="px-6 py-2 text-sm">Pelayanannya tidak buruk dan....</td>
-                            <td className="px-6 py-2 text-sm">ahmad yani</td>
-                            <td className="px-6 py-2 text-sm">Pelayanan</td>
-                            <td className="px-6 py-2 text-xs">
-                                <button className="cursor-pointer flex gap-1 items-center bg-green-200 px-2 rounded-lg">
-                                    <CircleCheckBig className="w-3 text-green-600"/>
-                                    <span className="font-semibold text-green-900">Selesai</span>
-                                </button>
-                            </td>
-                            <td className="px-6 py-2 text-xs">
-                                <p className="flex gap-1 items-center justify-center bg-red-200 px-2 p-1 rounded-lg">
-                                    <span className="font-semibold text-red-900">High</span>
-                                </p>
-                            </td>
-                            <td className="px-6 py-2 text-sm">02-06-2006</td>
-                            <td className="px-6 py-2 text-sm"><button className="cursor-pointer"><Eye className="w-5 opacity-60" /></button></td>
-                        </tr>
-                        <tr className="hover:bg-gray-50 border-b-1 border-gray-200">
-                            <td className="px-6 py-2 text-sm font-semibold">CMP-2026-001</td>
-                            <td className="px-6 py-2 text-sm">Pelayanannya tidak buruk dan....</td>
-                            <td className="px-6 py-2 text-sm">ahmad yani</td>
-                            <td className="px-6 py-2 text-sm">Pelayanan</td>
-                            <td className="px-6 py-2 text-xs">
-                                <button className="cursor-pointer flex gap-1 items-center bg-green-200 px-2 rounded-lg">
-                                    <CircleCheckBig className="w-3 text-green-600"/>
-                                    <span className="font-semibold text-green-900">Selesai</span>
-                                </button>
-                            </td>
-                            <td className="px-6 py-2 text-xs">
-                                <p className="flex gap-1 items-center justify-center bg-red-200 px-2 p-1 rounded-lg">
-                                    <span className="font-semibold text-red-900">High</span>
-                                </p>
-                            </td>
-                            <td className="px-6 py-2 text-sm">02-06-2006</td>
-                            <td className="px-6 py-2 text-sm"><button className="cursor-pointer"><Eye className="w-5 opacity-60" /></button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    )
+function MyComplaint() {
+  return (
+    <motion.div
+      className="p-5 flex flex-col gap-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <PageHeader title="Laporan Saya" subtitle="Status perkembangan laporan Anda" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {STATS.map(s => <StatCard key={s.label} {...s} />)}
+      </div>
+      <SearchFilterBar placeholder="Cari berdasarkan ID, Judul, atau Nama Pelapor..." filters={FILTERS} />
+      <DataTable columns={COLUMNS} data={SAMPLE_DATA} />
+    </motion.div>
+  )
 }
 
 export default MyComplaint
