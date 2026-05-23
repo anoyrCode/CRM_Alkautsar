@@ -66,6 +66,8 @@ function MyComplaint() {
   const { profile }  = useAuth()
   const [complaints, setComplaints] = useState([])
   const [fetching,   setFetching]   = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [filterValues, setFilterValues] = useState({ status: '' })
 
   useEffect(() => {
     if (!profile?.id) return
@@ -81,6 +83,17 @@ function MyComplaint() {
     }
     fetch()
   }, [profile?.id])
+
+  const handleFilterChange = (name, val) => setFilterValues(prev => ({ ...prev, [name]: val }))
+
+  const q = search.toLowerCase()
+  const filtered = complaints.filter(c => {
+    const matchSearch = !q ||
+      c.ticket_id?.toLowerCase().includes(q) ||
+      c.description?.toLowerCase().includes(q)
+    const matchStatus = !filterValues.status || c.status === filterValues.status
+    return matchSearch && matchStatus
+  })
 
   const total    = complaints.length
   const selesai  = complaints.filter(c => c.status === 'Selesai').length
@@ -105,14 +118,21 @@ function MyComplaint() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {STATS.map(s => <StatCard key={s.label} {...s} />)}
       </div>
-      <SearchFilterBar placeholder="Cari berdasarkan ID atau Deskripsi..." filters={FILTERS} />
+      <SearchFilterBar
+        placeholder="Cari berdasarkan ID atau Deskripsi..."
+        filters={FILTERS}
+        value={search}
+        onSearch={setSearch}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+      />
       {fetching ? (
         <div className="bg-white rounded-xl shadow-sm p-10 flex items-center justify-center gap-3 text-slate-400 text-sm">
           <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
           Memuat data...
         </div>
       ) : (
-        <DataTable columns={COLUMNS} data={complaints} />
+        <DataTable columns={COLUMNS} data={filtered} />
       )}
     </motion.div>
   )

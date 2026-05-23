@@ -78,6 +78,7 @@ function Category() {
   const [saving,        setSaving]        = useState(false)
   const [error,         setError]         = useState('')
   const [modal,         setModal]         = useState(null)
+  const [search,        setSearch]        = useState('')
 
   const fetchAll = async () => {
     setFetching(true)
@@ -170,7 +171,11 @@ function Category() {
           <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-4 py-2.5">{error}</div>
         )}
 
-        <SearchFilterBar placeholder="Cari berdasarkan nama kategori..." />
+        <SearchFilterBar
+          placeholder="Cari berdasarkan nama kategori..."
+          value={search}
+          onSearch={setSearch}
+        />
 
         {fetching ? (
           <div className="bg-white rounded-xl shadow-sm p-10 flex items-center justify-center gap-3 text-slate-400 text-sm">
@@ -178,7 +183,9 @@ function Category() {
             Memuat data...
           </div>
         ) : (
-          <DataTable columns={COLUMNS} data={categories} />
+          <DataTable columns={COLUMNS} data={
+            search ? categories.filter(c => c.name?.toLowerCase().includes(search.toLowerCase())) : categories
+          } />
         )}
       </motion.div>
 

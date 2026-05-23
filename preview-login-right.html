@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preview Right Panel — Form Area</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .tab-btn { transition: all 0.2s; }
+    .tab-btn.active { background: #0092B7; color: white; }
+    .panel { display: none; }
+    .panel.active { display: flex; }
+  </style>
+</head>
+<body class="bg-slate-300 min-h-screen">
+
+  <div class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex gap-2 bg-white rounded-xl shadow-lg p-1.5">
+    <button class="tab-btn active px-5 py-2 rounded-lg text-sm font-semibold text-slate-600" onclick="show('a',this)">A — Stat Badges</button>
+    <button class="tab-btn px-5 py-2 rounded-lg text-sm font-semibold text-slate-600" onclick="show('b',this)">B — Quote</button>
+    <button class="tab-btn px-5 py-2 rounded-lg text-sm font-semibold text-slate-600" onclick="show('c',this)">C — Feature Pills</button>
+  </div>
+
+  <!-- Shared left panel snippet -->
+  <template id="left-panel">
+    <div class="hidden md:flex w-1/2 flex-col justify-between p-12 relative overflow-hidden" style="background:linear-gradient(135deg,#004f63,#007a9a,#0092B7,#39c2e6)">
+      <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5"></div>
+      <div class="absolute -bottom-24 -right-12 w-96 h-96 rounded-full bg-white/5"></div>
+      <div class="absolute top-1/2 -right-10 w-48 h-48 rounded-full bg-white/10"></div>
+      <div class="relative z-10">
+        <div class="flex items-center gap-3 mb-12">
+          <div class="w-8 h-8 bg-white/20 rounded-lg"></div>
+          <div><p class="font-extrabold text-white text-base">CRM Al-Kautsar</p><p class="text-sky-200 text-xs">Complaint Management</p></div>
+        </div>
+        <h1 class="text-3xl font-extrabold text-white leading-snug mb-4">Kelola komplain<br/>lebih mudah &<br/>terstruktur</h1>
+        <p class="text-sky-100 text-sm leading-relaxed mb-10">Platform terpadu untuk manajemen pengaduan dan monitoring penyelesaian komplain pesantren Al-Kautsar.</p>
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Notifikasi real-time ke divisi terkait</span></div>
+          <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Pantau progress & status komplain</span></div>
+          <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Laporan & analitik kinerja divisi</span></div>
+        </div>
+      </div>
+      <p class="relative z-10 text-sky-200 text-xs">© 2026 MANAGORA · Al-Kautsar</p>
+    </div>
+  </template>
+
+  <!-- ═══ A — Stat Badges di bawah form ═══ -->
+  <div id="panel-a" class="panel active min-h-screen">
+    <div class="flex w-full min-h-screen">
+      <div class="hidden md:flex w-1/2 flex-col justify-between p-12 relative overflow-hidden" style="background:linear-gradient(135deg,#004f63,#007a9a,#0092B7,#39c2e6)">
+        <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5"></div>
+        <div class="absolute -bottom-24 -right-12 w-96 h-96 rounded-full bg-white/5"></div>
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 mb-12"><div class="w-8 h-8 bg-white/20 rounded-lg"></div><div><p class="font-extrabold text-white text-base">CRM Al-Kautsar</p><p class="text-sky-200 text-xs">Complaint Management</p></div></div>
+          <h1 class="text-3xl font-extrabold text-white leading-snug mb-4">Kelola komplain<br/>lebih mudah &<br/>terstruktur</h1>
+          <p class="text-sky-100 text-sm leading-relaxed mb-10">Platform terpadu untuk manajemen pengaduan pesantren Al-Kautsar.</p>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Notifikasi real-time ke divisi terkait</span></div>
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Pantau progress & status komplain</span></div>
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Laporan & analitik kinerja divisi</span></div>
+          </div>
+        </div>
+        <p class="relative z-10 text-sky-200 text-xs">© 2026 MANAGORA · Al-Kautsar</p>
+      </div>
+
+      <!-- Right A -->
+      <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-8 p-10 bg-white">
+        <!-- Form -->
+        <div class="w-full max-w-sm">
+          <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Assalamualaikum ✦</h2>
+          <p class="text-sm text-slate-400 mb-8">Masuk untuk melanjutkan ke dashboard</p>
+          <div class="flex flex-col gap-4">
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Alamat Email</label>
+              <input type="email" placeholder="nama@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Password</label>
+              <input type="password" placeholder="Masukkan password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <button class="w-full bg-sky-600 text-white font-bold text-sm py-3 rounded-xl mt-1 shadow-md">Masuk ke Dashboard</button>
+          </div>
+        </div>
+
+        <!-- Stat badges di bawah form -->
+        <div class="w-full max-w-sm">
+          <div class="flex items-center gap-2 mb-3">
+            <div class="flex-1 h-px bg-slate-100"></div>
+            <span class="text-[11px] text-slate-300 font-medium">Statistik Sistem</span>
+            <div class="flex-1 h-px bg-slate-100"></div>
+          </div>
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-sky-50 border border-sky-100 rounded-xl p-3 text-center">
+              <p class="text-xl font-extrabold text-sky-700">98</p>
+              <p class="text-[10px] text-sky-400 font-medium mt-0.5">Selesai</p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-3 text-center">
+              <p class="text-xl font-extrabold text-emerald-700">7</p>
+              <p class="text-[10px] text-emerald-400 font-medium mt-0.5">Divisi</p>
+            </div>
+            <div class="bg-violet-50 border border-violet-100 rounded-xl p-3 text-center">
+              <p class="text-xl font-extrabold text-violet-700">94%</p>
+              <p class="text-[10px] text-violet-400 font-medium mt-0.5">Tingkat Selesai</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ B — Quote ═══ -->
+  <div id="panel-b" class="panel min-h-screen">
+    <div class="flex w-full min-h-screen">
+      <div class="hidden md:flex w-1/2 flex-col justify-between p-12 relative overflow-hidden" style="background:linear-gradient(135deg,#004f63,#007a9a,#0092B7,#39c2e6)">
+        <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5"></div>
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 mb-12"><div class="w-8 h-8 bg-white/20 rounded-lg"></div><div><p class="font-extrabold text-white text-base">CRM Al-Kautsar</p><p class="text-sky-200 text-xs">Complaint Management</p></div></div>
+          <h1 class="text-3xl font-extrabold text-white leading-snug mb-4">Kelola komplain<br/>lebih mudah &<br/>terstruktur</h1>
+          <p class="text-sky-100 text-sm leading-relaxed mb-10">Platform terpadu untuk manajemen pengaduan pesantren Al-Kautsar.</p>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Notifikasi real-time ke divisi terkait</span></div>
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Pantau progress & status komplain</span></div>
+          </div>
+        </div>
+        <p class="relative z-10 text-sky-200 text-xs">© 2026 MANAGORA · Al-Kautsar</p>
+      </div>
+
+      <!-- Right B -->
+      <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-8 p-10 bg-white">
+        <div class="w-full max-w-sm">
+          <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Assalamualaikum ✦</h2>
+          <p class="text-sm text-slate-400 mb-8">Masuk untuk melanjutkan ke dashboard</p>
+          <div class="flex flex-col gap-4">
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Alamat Email</label>
+              <input type="email" placeholder="nama@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Password</label>
+              <input type="password" placeholder="Masukkan password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <button class="w-full bg-sky-600 text-white font-bold text-sm py-3 rounded-xl mt-1 shadow-md">Masuk ke Dashboard</button>
+          </div>
+        </div>
+
+        <!-- Quote -->
+        <div class="w-full max-w-sm bg-sky-50 border border-sky-100 rounded-2xl px-5 py-4">
+          <p class="text-sky-300 text-3xl font-serif leading-none mb-2">"</p>
+          <p class="text-slate-600 text-sm leading-relaxed italic">
+            Pelayanan yang baik adalah cerminan dari akhlak yang mulia. Mari bersama mewujudkan pesantren yang lebih baik.
+          </p>
+          <div class="flex items-center gap-2 mt-3">
+            <div class="w-6 h-6 rounded-full bg-sky-200 flex items-center justify-center text-sky-700 text-[10px] font-bold">AK</div>
+            <span class="text-xs text-slate-400 font-medium">Pesantren Al-Kautsar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ C — Feature Pills ═══ -->
+  <div id="panel-c" class="panel min-h-screen">
+    <div class="flex w-full min-h-screen">
+      <div class="hidden md:flex w-1/2 flex-col justify-between p-12 relative overflow-hidden" style="background:linear-gradient(135deg,#004f63,#007a9a,#0092B7,#39c2e6)">
+        <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5"></div>
+        <div class="relative z-10">
+          <div class="flex items-center gap-3 mb-12"><div class="w-8 h-8 bg-white/20 rounded-lg"></div><div><p class="font-extrabold text-white text-base">CRM Al-Kautsar</p><p class="text-sky-200 text-xs">Complaint Management</p></div></div>
+          <h1 class="text-3xl font-extrabold text-white leading-snug mb-4">Kelola komplain<br/>lebih mudah &<br/>terstruktur</h1>
+          <p class="text-sky-100 text-sm leading-relaxed mb-10">Platform terpadu untuk manajemen pengaduan pesantren Al-Kautsar.</p>
+          <div class="flex flex-col gap-3">
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Notifikasi real-time ke divisi terkait</span></div>
+            <div class="flex items-center gap-3"><div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center shrink-0"><svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg></div><span class="text-sky-100 text-sm">Pantau progress & status komplain</span></div>
+          </div>
+        </div>
+        <p class="relative z-10 text-sky-200 text-xs">© 2026 MANAGORA · Al-Kautsar</p>
+      </div>
+
+      <!-- Right C -->
+      <div class="w-full md:w-1/2 flex flex-col items-center justify-center gap-8 p-10 bg-white">
+        <div class="w-full max-w-sm">
+          <h2 class="text-2xl font-extrabold text-slate-800 mb-1">Assalamualaikum ✦</h2>
+          <p class="text-sm text-slate-400 mb-8">Masuk untuk melanjutkan ke dashboard</p>
+          <div class="flex flex-col gap-4">
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Alamat Email</label>
+              <input type="email" placeholder="nama@email.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <div><label class="text-xs font-semibold text-slate-500 block mb-1.5">Password</label>
+              <input type="password" placeholder="Masukkan password" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"/></div>
+            <button class="w-full bg-sky-600 text-white font-bold text-sm py-3 rounded-xl mt-1 shadow-md">Masuk ke Dashboard</button>
+          </div>
+        </div>
+
+        <!-- Feature pills -->
+        <div class="w-full max-w-sm flex flex-col gap-2.5">
+          <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
+            <div class="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-700">Notifikasi Real-time</p>
+              <p class="text-[11px] text-slate-400">Divisi langsung dapat info komplain baru</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
+            <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-700">Analitik & Laporan</p>
+              <p class="text-[11px] text-slate-400">Pantau kinerja divisi secara visual</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3">
+            <div class="w-8 h-8 bg-violet-100 rounded-lg flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div>
+              <p class="text-xs font-semibold text-slate-700">Akses Berbasis Role</p>
+              <p class="text-[11px] text-slate-400">Hak akses sesuai jabatan & divisi</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function show(id, btn) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'))
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      document.getElementById('panel-' + id).classList.add('active')
+      btn.classList.add('active')
+    }
+  </script>
+</body>
+</html>

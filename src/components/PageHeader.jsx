@@ -1,4 +1,4 @@
-function PageHeader({ title, subtitle, badge, badgeIcon: BadgeIcon }) {
+function PageHeader({ title, subtitle, badge, badgeIcon: BadgeIcon, titleIcon: TitleIcon }) {
   return (
     <div className="bg-linear-to-r from-sky-700 to-sky-400 rounded-xl px-6 py-5">
       {badge && (
@@ -7,7 +7,10 @@ function PageHeader({ title, subtitle, badge, badgeIcon: BadgeIcon }) {
           {badge}
         </div>
       )}
-      <h1 className="text-2xl font-extrabold text-white">{title}</h1>
+      <h1 className="text-2xl font-extrabold text-white flex items-center gap-2">
+        {title}
+        {TitleIcon && <TitleIcon className="w-6 h-6 text-white/70" />}
+      </h1>
       {subtitle && <p className="text-white/80 text-sm mt-1">{subtitle}</p>}
     </div>
   )

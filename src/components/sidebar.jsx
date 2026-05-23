@@ -20,6 +20,20 @@ function Sidebarr() {
     ? profile.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : '?'
 
+  const has = perm => profile?.roles?.permissions?.includes(perm) ?? false
+
+  const mainMenu = [
+    has('buat_laporan')                              && { to: '/Buat Laporan', icon: ClipboardPlus,     label: 'Buat Laporan' },
+    (has('komplain_semua') || has('komplain_diterima')) && { to: '/Data Komplain', icon: Database,          label: 'Data Komplain' },
+    has('laporan_saya')                              && { to: '/Laporan Saya',  icon: MessageSquare,    label: 'Laporan Saya' },
+    has('kelola_kategori')                           && { to: '/Kategori',      icon: ChartColumnStacked, label: 'Kategori' },
+  ].filter(Boolean)
+
+  const settingsMenu = [
+    has('kelola_users') && { to: '/Users', icon: User,    label: 'Users' },
+    has('kelola_role')  && { to: '/Role',  icon: UserCog, label: 'Role' },
+  ].filter(Boolean)
+
   return (
     <div className="hidden xl:flex flex-col fixed left-0 top-0 h-screen w-64 bg-white border-r border-slate-200 z-30">
       <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
@@ -33,22 +47,28 @@ function Sidebarr() {
       </div>
 
       <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
-        <div className="flex flex-col gap-1">
-          <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">General</p>
-          <PagesNav to="/Dashboard" icon={LayoutDashboard}>Dashboard</PagesNav>
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Main Menu</p>
-          <PagesNav to="/Buat Laporan" icon={ClipboardPlus}>Buat Laporan</PagesNav>
-          <PagesNav to="/Data Komplain" icon={Database}>Data Komplain</PagesNav>
-          <PagesNav to="/Laporan Saya" icon={MessageSquare}>Laporan Saya</PagesNav>
-          <PagesNav to="/Kategori" icon={ChartColumnStacked}>Kategori</PagesNav>
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pengaturan</p>
-          <PagesNav to="/Users" icon={User}>Users</PagesNav>
-          <PagesNav to="/Role" icon={UserCog}>Role</PagesNav>
-        </div>
+        {has('dashboard') && (
+          <div className="flex flex-col gap-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">General</p>
+            <PagesNav to="/Dashboard" icon={LayoutDashboard}>Dashboard</PagesNav>
+          </div>
+        )}
+        {mainMenu.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Main Menu</p>
+            {mainMenu.map(item => (
+              <PagesNav key={item.to} to={item.to} icon={item.icon}>{item.label}</PagesNav>
+            ))}
+          </div>
+        )}
+        {settingsMenu.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pengaturan</p>
+            {settingsMenu.map(item => (
+              <PagesNav key={item.to} to={item.to} icon={item.icon}>{item.label}</PagesNav>
+            ))}
+          </div>
+        )}
       </nav>
 
       <div className="px-4 py-4 border-t border-slate-100">

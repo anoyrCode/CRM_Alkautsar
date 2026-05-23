@@ -88,6 +88,7 @@ function CreateComplaint() {
 
   const [categories, setCategories] = useState([])
   const [categoryId, setCategoryId] = useState('')
+  const [title,      setTitle]      = useState('')
   const [priority,   setPriority]   = useState('')
   const [detail,     setDetail]     = useState('')
   const [files,      setFiles]      = useState([])
@@ -100,7 +101,7 @@ function CreateComplaint() {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    if (!categoryId || !priority || detail.trim().length < 20) {
+    if (!title.trim() || !categoryId || !priority || detail.trim().length < 20) {
       setError('Lengkapi semua field. Deskripsi minimal 20 karakter.')
       return
     }
@@ -112,6 +113,7 @@ function CreateComplaint() {
       .from('complaints')
       .insert({
         reporter_id:  profile.id,
+        title:        title.trim(),
         category_id:  categoryId,
         priority,
         description:  detail.trim(),
@@ -210,13 +212,32 @@ function CreateComplaint() {
 
           <div className="flex flex-col gap-4">
             <FormSection icon={ReceiptText} title="Detail Komplain" />
-            <textarea
-              value={detail}
-              onChange={e => setDetail(e.target.value)}
-              rows={6}
-              placeholder="Jelaskan masalah Anda secara detail... (minimal 20 karakter)"
-              className={`${inputClass} resize-none`}
-            />
+            <div>
+              <label className="flex items-center gap-1.5 mb-1.5">
+                <ReceiptText className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs font-semibold text-slate-500">Judul Komplain</span>
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                placeholder="Tuliskan judul singkat komplain Anda"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 mb-1.5">
+                <ReceiptText className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs font-semibold text-slate-500">Deskripsi</span>
+              </label>
+              <textarea
+                value={detail}
+                onChange={e => setDetail(e.target.value)}
+                rows={6}
+                placeholder="Jelaskan masalah Anda secara detail... (minimal 20 karakter)"
+                className={`${inputClass} resize-none`}
+              />
+            </div>
           </div>
 
           <DokumenPendukung files={files} setFiles={setFiles} />

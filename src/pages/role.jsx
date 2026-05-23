@@ -108,6 +108,7 @@ function Role() {
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState('')
   const [modal,    setModal]    = useState(null)
+  const [search,   setSearch]   = useState('')
 
   const fetchRoles = async () => {
     setFetching(true)
@@ -210,7 +211,11 @@ function Role() {
           <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-4 py-2.5">{error}</div>
         )}
 
-        <SearchFilterBar placeholder="Cari berdasarkan nama role..." />
+        <SearchFilterBar
+          placeholder="Cari berdasarkan nama role..."
+          value={search}
+          onSearch={setSearch}
+        />
 
         {fetching ? (
           <div className="bg-white rounded-xl shadow-sm p-10 flex items-center justify-center gap-3 text-slate-400 text-sm">
@@ -218,7 +223,9 @@ function Role() {
             Memuat data...
           </div>
         ) : (
-          <DataTable columns={COLUMNS} data={roles} />
+          <DataTable columns={COLUMNS} data={
+            search ? roles.filter(r => r.name?.toLowerCase().includes(search.toLowerCase())) : roles
+          } />
         )}
       </motion.div>
 

@@ -1,12 +1,41 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, LayoutDashboard, ClipboardPlus, Database, MessageSquare,
-  ChartColumnStacked, User, UserCog
+  ChartColumnStacked, User, UserCog, LogOut
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
 import PagesNav from './PagesNav'
+import { useAuth } from '../context/AuthContext'
 
 function NavSidebar({ isOpen, onClose }) {
+  const { profile, signOut } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    onClose()
+    await signOut()
+    navigate('/login')
+  }
+
+  const has = perm => profile?.roles?.permissions?.includes(perm) ?? false
+
+  const mainMenu = [
+    has('buat_laporan')                                 && { to: '/Buat Laporan', icon: ClipboardPlus,      label: 'Buat Laporan' },
+    (has('komplain_semua') || has('komplain_diterima')) && { to: '/Data Komplain', icon: Database,           label: 'Data Komplain' },
+    has('laporan_saya')                                 && { to: '/Laporan Saya',  icon: MessageSquare,     label: 'Laporan Saya' },
+    has('kelola_kategori')                              && { to: '/Kategori',      icon: ChartColumnStacked, label: 'Kategori' },
+  ].filter(Boolean)
+
+  const settingsMenu = [
+    has('kelola_users') && { to: '/Users', icon: User,    label: 'Users' },
+    has('kelola_role')  && { to: '/Role',  icon: UserCog, label: 'Role' },
+  ].filter(Boolean)
+
+  const initials = profile?.full_name
+    ? profile.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -41,31 +70,46 @@ function NavSidebar({ isOpen, onClose }) {
             </div>
 
             <nav className="flex-1 px-3 py-4 flex flex-col gap-5 overflow-y-auto">
-              <div className="flex flex-col gap-1">
-                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">General</p>
-                <PagesNav to="/Dashboard" icon={LayoutDashboard}>Dashboard</PagesNav>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Main Menu</p>
-                <PagesNav to="/Buat Laporan" icon={ClipboardPlus}>Buat Laporan</PagesNav>
-                <PagesNav to="/Data Komplain" icon={Database}>Data Komplain</PagesNav>
-                <PagesNav to="/Laporan Saya" icon={MessageSquare}>Laporan Saya</PagesNav>
-                <PagesNav to="/Kategori" icon={ChartColumnStacked}>Kategori</PagesNav>
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pengaturan</p>
-                <PagesNav to="/Users" icon={User}>Users</PagesNav>
-                <PagesNav to="/Role" icon={UserCog}>Role</PagesNav>
-              </div>
+              {has('dashboard') && (
+                <div className="flex flex-col gap-1">
+                  <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">General</p>
+                  <PagesNav to="/Dashboard" icon={LayoutDashboard}>Dashboard</PagesNav>
+                </div>
+              )}
+              {mainMenu.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Main Menu</p>
+                  {mainMenu.map(item => (
+                    <PagesNav key={item.to} to={item.to} icon={item.icon}>{item.label}</PagesNav>
+                  ))}
+                </div>
+              )}
+              {settingsMenu.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <p className="px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Pengaturan</p>
+                  {settingsMenu.map(item => (
+                    <PagesNav key={item.to} to={item.to} icon={item.icon}>{item.label}</PagesNav>
+                  ))}
+                </div>
+              )}
             </nav>
 
             <div className="px-4 py-4 border-t border-slate-100">
               <div className="flex items-center gap-3 bg-slate-50 rounded-lg px-3 py-2.5">
-                <div className="w-7 h-7 rounded-full bg-linear-to-br from-sky-500 to-sky-400 flex items-center justify-center text-white text-[11px] font-bold shrink-0">M</div>
-                <div>
-                  <p className="text-[11px] font-semibold text-slate-700">Testing User</p>
-                  <p className="text-[10px] text-slate-400">Administrator</p>
+                <div className="w-7 h-7 rounded-full bg-linear-to-br from-sky-500 to-sky-400 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
+                  {initials}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold text-slate-700 truncate">{profile?.full_name ?? '...'}</p>
+                  <p className="text-[10px] text-slate-400 truncate">{profile?.roles?.name ?? '...'}</p>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-7 h-7 rounded-md hover:bg-red-50 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors shrink-0"
+                  title="Keluar"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </motion.div>

@@ -5,9 +5,11 @@ import Sidebarr from './components/sidebar'
 import ResNav from './components/Layouts/resNav'
 import RouteConfig from './routes/routeConfig'
 import Login from './pages/auth/Login'
-import Register from './pages/auth/Register'
+import InstallPrompt from './components/InstallPrompt'
+import usePushNotification from './hooks/usePushNotification'
 
 function AppLayout() {
+  usePushNotification()
   return (
     <div className="min-h-screen bg-slate-50">
       <Sidebarr />
@@ -26,13 +28,13 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login"    element={<Login />} />
-        <Route path="/register" element={<Register />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <AppLayout />
           </ProtectedRoute>
         } />
       </Routes>
+      <InstallPrompt />
     </AuthProvider>
   )
 }
