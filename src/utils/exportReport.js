@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable'
+import 'jspdf-autotable' // patches jsPDF.prototype with autoTable
 import * as XLSX from 'xlsx'
 
 function buildRows(complaints) {
@@ -10,7 +10,7 @@ function buildRows(complaints) {
     c.categories?.name ?? '—',
     c.priority ?? '—',
     c.status ?? '—',
-    new Date(c.created_at).toLocaleDateString('id-ID'),
+    c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '—',
   ])
 }
 
