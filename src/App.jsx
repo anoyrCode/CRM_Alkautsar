@@ -5,6 +5,7 @@ import Sidebarr from './components/sidebar'
 import ResNav from './components/Layouts/resNav'
 import RouteConfig from './routes/routeConfig'
 import Login from './pages/auth/Login'
+import ResetPassword from './pages/auth/ResetPassword'
 import InstallPrompt from './components/InstallPrompt'
 import usePushNotification from './hooks/usePushNotification'
 
@@ -27,7 +28,8 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        <Route path="/login"    element={<Login />} />
+        <Route path="/login"          element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/*" element={
           <ProtectedRoute>
             <AppLayout />
