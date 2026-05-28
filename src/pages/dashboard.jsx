@@ -203,15 +203,17 @@ function Dashboard() {
       </div>
 
       {isDivisiRole && (
-        <StatCard
-          label="Poin Divisi Bulan Ini"
-          value={divisiPoin}
-          delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
-          deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
-          icon={Trophy}
-          iconBg="bg-amber-100"
-          iconColor="text-amber-600"
-        />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatCard
+            label="Poin Divisi Bulan Ini"
+            value={divisiPoin}
+            delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
+            deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
+            icon={Trophy}
+            iconBg="bg-amber-100"
+            iconColor="text-amber-600"
+          />
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
