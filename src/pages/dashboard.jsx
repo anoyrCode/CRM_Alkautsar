@@ -16,6 +16,7 @@ import PriorityDonutChart from '../components/PriorityDonutChart'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import DownloadReportModal from '../components/DownloadReportModal'
+import { calcDivisionPoints } from '../utils/divisionPoints'
 
 const QUICK_ACTIONS = [
   { label: 'Buat Laporan', icon: ClipboardPlus, to: '/Buat Laporan' },
@@ -40,6 +41,8 @@ function Dashboard() {
   const [divStats,       setDivStats]       = useState([])
   const [priorityData,   setPriorityData]   = useState({})
   const [fetching,       setFetching]       = useState(true)
+  const [divisiPoin,     setDivisiPoin]     = useState(0)
+  const [isDivisiRole,   setIsDivisiRole]   = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -49,8 +52,9 @@ function Dashboard() {
       const perms    = profile.roles?.permissions ?? []
       const isAdmin  = perms.includes('komplain_semua')
       const isDivisi = perms.includes('komplain_diterima')
+      setIsDivisiRole(isDivisi)
 
-      let query = supabase.from('complaints').select('id, ticket_id, title, status, priority, created_at, updated_at, categories(name)')
+      let query = supabase.from('complaints').select('id, ticket_id, title, status, priority, created_at, updated_at, resolved_at, categories(name)')
 
       if (isAdmin) {
         // lihat semua
@@ -108,33 +112,47 @@ function Dashboard() {
         selesai:  catLabels.map(l => catMap[l].selesai),
       })
 
-      // Peringkat divisi — completion % + avg days, hanya untuk admin
       if (isAdmin) {
+        const now = new Date()
+        const monthComplaints = complaints.filter(c => {
+          const d = new Date(c.created_at)
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+        })
+
+        const pointsMap = calcDivisionPoints(monthComplaints)
+
         const divMap = {}
         complaints.forEach(c => {
           const name = c.categories?.name ?? 'Lainnya'
-          if (!divMap[name]) divMap[name] = { total: 0, selesai: 0, totalDays: 0 }
+          if (!divMap[name]) divMap[name] = { total: 0, selesai: 0 }
           divMap[name].total++
-          if (c.status === 'Selesai') {
-            divMap[name].selesai++
-            divMap[name].totalDays += (new Date(c.updated_at) - new Date(c.created_at)) / 86400000
-          }
+          if (c.status === 'Selesai') divMap[name].selesai++
         })
+
         const ranked = Object.entries(divMap)
           .map(([name, d]) => ({
             name,
             total:   d.total,
             selesai: d.selesai,
-            pct:     d.total > 0 ? Math.round(d.selesai / d.total * 100) : 0,
-            avgDays: d.selesai > 0 ? d.totalDays / d.selesai : null,
+            points:  Math.round(pointsMap[name] ?? 0),
           }))
-          .sort((a, b) => b.pct - a.pct || (a.avgDays ?? 999) - (b.avgDays ?? 999))
+          .sort((a, b) => b.points - a.points)
         setDivStats(ranked)
 
-        // Distribusi prioritas
         const pMap = { Critical: 0, High: 0, Medium: 0, Low: 0 }
         complaints.forEach(c => { if (c.priority && pMap[c.priority] !== undefined) pMap[c.priority]++ })
         setPriorityData(pMap)
+      }
+
+      if (isDivisi) {
+        const now = new Date()
+        const monthComplaints = complaints.filter(c => {
+          const d = new Date(c.created_at)
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+        })
+        const pMap = calcDivisionPoints(monthComplaints)
+        const total = Math.round(Object.values(pMap).reduce((sum, p) => sum + p, 0))
+        setDivisiPoin(total)
       }
 
       // Bar — Mei s/d Oktober tahun berjalan
@@ -183,6 +201,18 @@ function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {STATS.map(s => <StatCard key={s.label} {...s} />)}
       </div>
+
+      {isDivisiRole && (
+        <StatCard
+          label="Poin Divisi Bulan Ini"
+          value={divisiPoin}
+          delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
+          deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
+          icon={Trophy}
+          iconBg="bg-amber-100"
+          iconColor="text-amber-600"
+        />
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
