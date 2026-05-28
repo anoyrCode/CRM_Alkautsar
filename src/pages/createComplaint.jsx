@@ -133,20 +133,17 @@ function CreateComplaint() {
         .from('complaint-attachments')
         .upload(filePath, file)
 
-      console.log('storage upload:', { uploaded, upErr })
-
       if (!upErr && uploaded) {
         const { data: { publicUrl } } = supabase.storage
           .from('complaint-attachments')
           .getPublicUrl(filePath)
 
-        const { error: insErr } = await supabase.from('complaint_attachments').insert({
+        await supabase.from('complaint_attachments').insert({
           complaint_id: complaint.id,
           file_name:    file.name,
           file_url:     publicUrl,
           file_size:    file.size,
         })
-        console.log('attachment insert:', { insErr })
       }
     }
 
