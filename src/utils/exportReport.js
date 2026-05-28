@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf'
-import 'jspdf-autotable' // patches jsPDF.prototype with autoTable
+import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
 
 function buildRows(complaints) {
@@ -41,7 +41,7 @@ export function exportPDF(complaints, meta) {
   doc.text(`Tgl cetak: ${printDate}`, 14, 45)
 
   // Ringkasan
-  doc.autoTable({
+  autoTable(doc, {
     startY: 52,
     head: [['Total', 'Selesai', 'Diproses', 'Pending']],
     body: [[stats.total, stats.selesai, stats.diproses, stats.pending]],
@@ -52,7 +52,7 @@ export function exportPDF(complaints, meta) {
 
   // Daftar komplain
   const rows = buildRows(complaints)
-  doc.autoTable({
+  autoTable(doc, {
     startY: doc.lastAutoTable.finalY + 8,
     head: [['No', 'Ticket ID', 'Judul', 'Kategori', 'Prioritas', 'Status', 'Tanggal']],
     body: rows.length > 0 ? rows : [['', '', 'Tidak ada data pada periode ini', '', '', '', '']],
