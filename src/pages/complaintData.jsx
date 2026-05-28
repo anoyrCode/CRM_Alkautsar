@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft } from 'lucide-react'
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft, Paperclip, Download, FileImage, FileType } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
@@ -94,8 +94,31 @@ function ConfirmSelesaiModal({ complaint, onConfirm, onCancel, saving }) {
   )
 }
 
+function FileIcon({ name }) {
+  const ext = name?.split('.').pop()?.toLowerCase()
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) return <FileImage className="w-3.5 h-3.5 text-sky-500" />
+  return <FileType className="w-3.5 h-3.5 text-slate-400" />
+}
+
+function formatSize(bytes) {
+  if (!bytes) return ''
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / 1048576).toFixed(1) + ' MB'
+}
+
 function DetailModal({ complaint, onClose }) {
   const divisionName = complaint.categories?.assigned_role?.name ?? '—'
+  const [attachments, setAttachments] = useState([])
+  const [loadingAtt,  setLoadingAtt]  = useState(true)
+
+  useEffect(() => {
+    supabase
+      .from('complaint_attachments')
+      .select('id, file_name, file_url, file_size')
+      .eq('complaint_id', complaint.id)
+      .then(({ data }) => { setAttachments(data ?? []); setLoadingAtt(false) })
+  }, [complaint.id])
 
   const infoRows = [
     { label: 'Pelapor',        value: complaint.reporter?.full_name ?? '—',   Icon: UserIcon },
@@ -165,6 +188,42 @@ function DetailModal({ complaint, onClose }) {
             <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
               {complaint.description || 'Tidak ada deskripsi.'}
             </p>
+          </div>
+
+          {/* Lampiran */}
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+              <Paperclip className="w-3.5 h-3.5" />Dokumen Pendukung
+            </p>
+            {loadingAtt ? (
+              <div className="flex items-center gap-2 text-xs text-slate-400 py-2">
+                <div className="w-3.5 h-3.5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                Memuat lampiran...
+              </div>
+            ) : attachments.length === 0 ? (
+              <p className="text-xs text-slate-400 italic">Tidak ada dokumen pendukung.</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {attachments.map(att => (
+                  <a
+                    key={att.id}
+                    href={att.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 hover:bg-sky-50 hover:border-sky-200 transition-colors group"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0">
+                      <FileIcon name={att.file_name} />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-medium text-slate-700 truncate group-hover:text-sky-700 transition-colors">{att.file_name}</p>
+                      {att.file_size && <p className="text-xs text-slate-400">{formatSize(att.file_size)}</p>}
+                    </div>
+                    <Download className="w-4 h-4 text-slate-400 group-hover:text-sky-600 transition-colors shrink-0" />
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Divisi */}
