@@ -41,8 +41,6 @@ function Dashboard() {
   const [divStats,       setDivStats]       = useState([])
   const [priorityData,   setPriorityData]   = useState({})
   const [fetching,       setFetching]       = useState(true)
-  const [divisiPoin,     setDivisiPoin]     = useState(0)
-  const [isDivisiRole,   setIsDivisiRole]   = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -52,7 +50,6 @@ function Dashboard() {
       const perms    = profile.roles?.permissions ?? []
       const isAdmin  = perms.includes('komplain_semua')
       const isDivisi = perms.includes('komplain_diterima')
-      setIsDivisiRole(isDivisi)
 
       let query = supabase.from('complaints').select('id, ticket_id, title, status, priority, created_at, updated_at, resolved_at, categories(name)')
 
@@ -144,17 +141,6 @@ function Dashboard() {
         setPriorityData(pMap)
       }
 
-      if (isDivisi) {
-        const now = new Date()
-        const monthComplaints = complaints.filter(c => {
-          const d = new Date(c.created_at)
-          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
-        })
-        const pMap = calcDivisionPoints(monthComplaints)
-        const total = Math.round(Object.values(pMap).reduce((sum, p) => sum + p, 0))
-        setDivisiPoin(total)
-      }
-
       // Bar — Mei s/d Oktober tahun berjalan
       const year   = new Date().getFullYear()
       const months = [4, 5, 6, 7, 8, 9].map(m => ({ year, month: m, label: MONTH_NAMES[m] }))
@@ -202,21 +188,8 @@ function Dashboard() {
         {STATS.map(s => <StatCard key={s.label} {...s} />)}
       </div>
 
-      {isDivisiRole && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard
-            label="Poin Divisi Bulan Ini"
-            value={divisiPoin}
-            delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
-            deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
-            icon={Trophy}
-            iconBg="bg-amber-100"
-            iconColor="text-amber-600"
-          />
-        </div>
-      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <ChartSpline className="w-4 h-4 text-sky-600" />
