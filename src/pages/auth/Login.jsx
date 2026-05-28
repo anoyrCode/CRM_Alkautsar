@@ -46,7 +46,7 @@ function BrandPanel() {
         </div>
       </div>
 
-      <p className="relative z-10 text-sky-200 text-xs">© 2026 MANAGORA · Al-Kautsar</p>
+      <p className="relative z-10 text-sky-200 text-xs">© 2026 Al-Kautsar</p>
     </div>
   )
 }
