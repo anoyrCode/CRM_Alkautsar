@@ -5,12 +5,12 @@ import * as XLSX from 'xlsx'
 function buildRows(complaints) {
   return complaints.map((c, i) => [
     i + 1,
-    c.ticket_id ?? '—',
-    c.title ?? '—',
-    c.categories?.name ?? '—',
-    c.priority ?? '—',
-    c.status ?? '—',
-    c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '—',
+    c.ticket_id ?? '-',
+    c.title ?? '-',
+    c.categories?.name ?? '-',
+    c.priority ?? '-',
+    c.status ?? '-',
+    c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '-',
   ])
 }
 
@@ -37,7 +37,7 @@ export function exportPDF(complaints, meta) {
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   doc.text(`Periode  : ${dateFrom} s/d ${dateTo}`, 14, 33)
-  doc.text(`Dicetak  : ${userName} — ${roleName}`, 14, 39)
+  doc.text(`Dicetak  : ${userName} - ${roleName}`, 14, 39)
   doc.text(`Tgl cetak: ${printDate}`, 14, 45)
 
   // Ringkasan
