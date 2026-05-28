@@ -15,6 +15,7 @@ import DivisionRankChart from '../components/DivisionRankChart'
 import PriorityDonutChart from '../components/PriorityDonutChart'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import DownloadReportModal from '../components/DownloadReportModal'
 
 const QUICK_ACTIONS = [
   { label: 'Buat Laporan', icon: ClipboardPlus, to: '/Buat Laporan' },
@@ -28,6 +29,7 @@ const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Se
 function Dashboard() {
   const { profile } = useAuth()
   const navigate    = useNavigate()
+  const [showDownloadModal, setShowDownloadModal] = useState(false)
 
   const [stats,          setStats]          = useState({ total: 0, selesai: 0, diproses: 0, pending: 0 })
   const [pieData,        setPieData]        = useState({ labels: [], pending: [], diproses: [], selesai: [] })
@@ -307,7 +309,7 @@ function Dashboard() {
           {QUICK_ACTIONS.map(({ label, icon: Icon, to }) => (
             <button
               key={label}
-              onClick={() => navigate(to)}
+              onClick={() => label === 'Unduh Laporan' ? setShowDownloadModal(true) : navigate(to)}
               className="bg-sky-50 border border-sky-100 rounded-xl py-4 flex flex-col items-center gap-2 hover:bg-sky-100 hover:border-sky-200 transition-all duration-150"
             >
               <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
@@ -318,6 +320,8 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      <DownloadReportModal open={showDownloadModal} onClose={() => setShowDownloadModal(false)} />
     </motion.div>
   )
 }
