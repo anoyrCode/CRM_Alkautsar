@@ -49,7 +49,7 @@ export async function exportPDF(complaints, meta) {
   // Header: logo pojok kiri, judul + info pojok kanan
   try {
     const { base64: logoBase64, dims } = await loadLogo()
-    const logoW = 42
+    const logoW = 52
     const logoH = (dims.h / dims.w) * logoW
     doc.addImage(logoBase64, 'PNG', 14, 10, logoW, logoH)
   } catch {
