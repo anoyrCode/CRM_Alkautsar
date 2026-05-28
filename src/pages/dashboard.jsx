@@ -236,8 +236,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {(profile?.roles?.permissions ?? []).includes('komplain_semua') && (
-        {isDivisiRole && (
+      {isDivisiRole && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard
             label="Poin Divisi Bulan Ini"
@@ -251,7 +250,8 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {(profile?.roles?.permissions ?? []).includes('komplain_semua') && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-xl p-4 shadow-sm">
             <div className="flex items-center gap-2 mb-3">
               <Trophy className="w-4 h-4 text-sky-600" />
