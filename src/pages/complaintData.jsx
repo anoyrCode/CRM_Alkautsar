@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck } from 'lucide-react'
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
@@ -88,6 +88,105 @@ function ConfirmSelesaiModal({ complaint, onConfirm, onCancel, saving }) {
               {saving ? 'Menyimpan...' : 'Ya, Selesaikan'}
             </button>
           </div>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+function DetailModal({ complaint, onClose }) {
+  const divisionName = complaint.categories?.assigned_role?.name ?? '—'
+
+  const infoRows = [
+    { label: 'Pelapor',        value: complaint.reporter?.full_name ?? '—',   Icon: UserIcon },
+    { label: 'Kategori',       value: complaint.categories?.name ?? '—',       Icon: Tag },
+    { label: 'Tanggal Dibuat', value: complaint.created_at
+        ? new Date(complaint.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+        : '—', Icon: Calendar },
+  ]
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 text-sky-600" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-sm leading-tight">{complaint.ticket_id}</p>
+              <p className="text-xs text-slate-400">Detail Komplain</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="overflow-y-auto px-5 py-4 flex flex-col gap-4">
+          {/* Judul + badge */}
+          <div>
+            <h3 className="text-base font-bold text-slate-800 mb-2 leading-snug">{complaint.title}</h3>
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge status={complaint.status} />
+              <PriorityBadge priority={complaint.priority} />
+            </div>
+          </div>
+
+          {/* Info rows */}
+          <div className="bg-slate-50 rounded-xl p-4 flex flex-col gap-3">
+            {infoRows.map(({ label, value, Icon }) => (
+              <div key={label} className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">{label}</p>
+                  <p className="text-sm font-semibold text-slate-700">{value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Deskripsi */}
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+              <AlignLeft className="w-3.5 h-3.5" />Deskripsi
+            </p>
+            <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
+              {complaint.description || 'Tidak ada deskripsi.'}
+            </p>
+          </div>
+
+          {/* Divisi */}
+          <div className="bg-sky-50 rounded-xl p-4 flex items-center gap-3 border border-sky-100">
+            <div className="w-9 h-9 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+              <Building2 className="w-4 h-4 text-sky-600" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400">Divisi Penanggung Jawab</p>
+              <p className="text-sm font-bold text-sky-700">{divisionName}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-4 border-t border-slate-100 shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full border border-slate-200 text-slate-600 text-sm font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Tutup
+          </button>
         </div>
       </motion.div>
     </div>
@@ -193,6 +292,7 @@ function CompliantData() {
   const [complaints,     setComplaints]     = useState([])
   const [fetching,       setFetching]       = useState(true)
   const [editComplaint,  setEditComplaint]  = useState(null)
+  const [detailComplaint, setDetailComplaint] = useState(null)
   const [search,         setSearch]         = useState('')
   const [filterValues,   setFilterValues]   = useState({ status: '' })
 
@@ -213,7 +313,7 @@ function CompliantData() {
 
       let query = supabase
         .from('complaints')
-        .select('*, reporter:profiles!reporter_id(full_name), categories(name)')
+        .select('*, reporter:profiles!reporter_id(full_name), categories(name, assigned_role:roles!assigned_role_id(name))')
         .order('created_at', { ascending: false })
 
       // Divisi lihat semua komplain yang kategorinya ditujukan ke role mereka
@@ -276,14 +376,23 @@ function CompliantData() {
     { key: 'status',      label: 'Status',    render: v => <StatusBadge status={v} /> },
     { key: 'priority',    label: 'Prioritas', render: v => <PriorityBadge priority={v} /> },
     { key: 'created_at',  label: 'Tanggal',   render: v => <span className="text-slate-400 text-xs">{v ? new Date(v).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</span> },
-    { key: 'aksi',        label: 'Aksi',      render: (_, row) => (
-      <button
-        onClick={() => setEditComplaint(row)}
-        className="w-7 h-7 bg-sky-50 hover:bg-sky-100 rounded-lg flex items-center justify-center transition-colors"
-        title="Edit Status"
-      >
-        <Eye className="w-3.5 h-3.5 text-sky-600" />
-      </button>
+    { key: 'aksi', label: 'Aksi', render: (_, row) => (
+      <div className="flex gap-1.5">
+        <button
+          onClick={() => setDetailComplaint(row)}
+          className="w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
+          title="Lihat Detail"
+        >
+          <FileText className="w-3.5 h-3.5 text-slate-500" />
+        </button>
+        <button
+          onClick={() => setEditComplaint(row)}
+          className="w-7 h-7 bg-sky-50 hover:bg-sky-100 rounded-lg flex items-center justify-center transition-colors"
+          title="Edit Status"
+        >
+          <Eye className="w-3.5 h-3.5 text-sky-600" />
+        </button>
+      </div>
     )},
   ]
 
@@ -316,6 +425,15 @@ function CompliantData() {
           <DataTable columns={COLUMNS} data={filtered} />
         )}
       </motion.div>
+
+      <AnimatePresence>
+        {detailComplaint && (
+          <DetailModal
+            complaint={detailComplaint}
+            onClose={() => setDetailComplaint(null)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {editComplaint && (
