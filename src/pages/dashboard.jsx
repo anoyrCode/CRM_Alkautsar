@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   UserStar, MessageSquareText, CircleCheckBig, Clock, CircleAlert,
   ChartSpline, ChartColumn, ClipboardPlus, MessageSquare, Download, Headset, Zap,
-  Activity, InboxIcon, Sparkles, Trophy, Flag
+  Activity, InboxIcon, Sparkles, Trophy, Flag, X, MessageCircle
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -30,6 +30,7 @@ function Dashboard() {
   const { profile } = useAuth()
   const navigate    = useNavigate()
   const [showDownloadModal, setShowDownloadModal] = useState(false)
+  const [showCSModal,       setShowCSModal]       = useState(false)
 
   const [stats,          setStats]          = useState({ total: 0, selesai: 0, diproses: 0, pending: 0 })
   const [pieData,        setPieData]        = useState({ labels: [], pending: [], diproses: [], selesai: [] })
@@ -309,7 +310,7 @@ function Dashboard() {
           {QUICK_ACTIONS.map(({ label, icon: Icon, to }) => (
             <button
               key={label}
-              onClick={() => label === 'Unduh Laporan' ? setShowDownloadModal(true) : to.startsWith('http') ? window.open(to, '_blank') : navigate(to)}
+              onClick={() => label === 'Unduh Laporan' ? setShowDownloadModal(true) : label === 'Hubungi CS' ? setShowCSModal(true) : navigate(to)}
               className="bg-sky-50 border border-sky-100 rounded-xl py-4 flex flex-col items-center gap-2 hover:bg-sky-100 hover:border-sky-200 transition-all duration-150"
             >
               <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
@@ -322,6 +323,45 @@ function Dashboard() {
       </div>
 
       <DownloadReportModal open={showDownloadModal} onClose={() => setShowDownloadModal(false)} />
+
+      {showCSModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowCSModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-bold text-slate-800">Butuh Bantuan?</h2>
+              <button type="button" onClick={() => setShowCSModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex flex-col items-center text-center gap-3 mb-6">
+              <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center">
+                <MessageCircle className="w-7 h-7 text-green-500" />
+              </div>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Menemui kendala atau memiliki pertanyaan? Tim CS kami siap membantu Anda melalui WhatsApp.
+              </p>
+              <span className="text-sm font-semibold text-slate-700">0895-3295-72147</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowCSModal(false)}
+                className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                Tutup
+              </button>
+              <button
+                type="button"
+                onClick={() => { window.open('https://wa.me/62895329572147', '_blank'); setShowCSModal(false) }}
+                className="flex-1 py-2.5 rounded-lg bg-green-500 text-white text-sm font-semibold hover:bg-green-600 flex items-center justify-center gap-2 transition-colors"
+              >
+                <MessageCircle className="w-4 h-4" />
+                Chat via WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   )
 }
