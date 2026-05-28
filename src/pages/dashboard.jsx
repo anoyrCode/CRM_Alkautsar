@@ -21,7 +21,7 @@ const QUICK_ACTIONS = [
   { label: 'Buat Laporan', icon: ClipboardPlus, to: '/Buat Laporan' },
   { label: 'Lihat Status', icon: MessageSquare, to: '/Data Komplain' },
   { label: 'Unduh Laporan', icon: Download,      to: '#' },
-  { label: 'Hubungi CS',   icon: Headset,        to: '#' },
+  { label: 'Hubungi CS',   icon: Headset,        to: 'https://wa.me/62895329572147' },
 ]
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des']
@@ -309,7 +309,7 @@ function Dashboard() {
           {QUICK_ACTIONS.map(({ label, icon: Icon, to }) => (
             <button
               key={label}
-              onClick={() => label === 'Unduh Laporan' ? setShowDownloadModal(true) : navigate(to)}
+              onClick={() => label === 'Unduh Laporan' ? setShowDownloadModal(true) : to.startsWith('http') ? window.open(to, '_blank') : navigate(to)}
               className="bg-sky-50 border border-sky-100 rounded-xl py-4 flex flex-col items-center gap-2 hover:bg-sky-100 hover:border-sky-200 transition-all duration-150"
             >
               <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
