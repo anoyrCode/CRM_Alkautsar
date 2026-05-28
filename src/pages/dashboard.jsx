@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   UserStar, MessageSquareText, CircleCheckBig, Clock, CircleAlert,
   ChartSpline, ChartColumn, ClipboardPlus, MessageSquare, Download, Headset, Zap,
-  Activity, InboxIcon, Sparkles, Trophy, Flag, X, MessageCircle
+  Activity, InboxIcon, Sparkles, Trophy, Flag, X, MessageCircle, Info
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -43,6 +43,7 @@ function Dashboard() {
   const [fetching,       setFetching]       = useState(true)
   const [divisiPoin,     setDivisiPoin]     = useState(0)
   const [isDivisiRole,   setIsDivisiRole]   = useState(false)
+  const [showPoinInfo,   setShowPoinInfo]   = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -246,6 +247,7 @@ function Dashboard() {
             icon={Trophy}
             iconBg="bg-amber-100"
             iconColor="text-amber-600"
+            onClick={() => setShowPoinInfo(true)}
           />
         </div>
       )}
@@ -390,6 +392,82 @@ function Dashboard() {
               >
                 <MessageCircle className="w-4 h-4" />
                 Chat via WhatsApp
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPoinInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowPoinInfo(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center">
+                  <Trophy className="w-4 h-4 text-amber-600" />
+                </div>
+                <h2 className="text-base font-bold text-slate-800">Cara Penilaian Poin</h2>
+              </div>
+              <button type="button" onClick={() => setShowPoinInfo(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto px-5 pb-2">
+              <p className="text-xs text-slate-500 mb-4 leading-relaxed">Poin dihitung otomatis setiap bulan berdasarkan kinerja penanganan komplain divisi Anda.</p>
+
+              <div className="space-y-3">
+                <div className="bg-emerald-50 rounded-xl p-3.5">
+                  <p className="text-xs font-bold text-emerald-700 mb-1.5">Komplain Selesai</p>
+                  <p className="text-xs text-emerald-600 mb-2.5">Poin = <span className="font-semibold">5 × Multiplier Prioritas</span> + Bonus Kecepatan</p>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[['Critical', '×3 (15 poin)', 'text-red-600 bg-red-50'], ['High', '×2 (10 poin)', 'text-orange-600 bg-orange-50'], ['Medium', '×1 (5 poin)', 'text-amber-600 bg-amber-50'], ['Low', '×0.5 (2.5 poin)', 'text-slate-600 bg-slate-100']].map(([label, val, cls]) => (
+                      <div key={label} className={`flex justify-between items-center px-2.5 py-1.5 rounded-lg text-[11px] ${cls}`}>
+                        <span className="font-semibold">{label}</span>
+                        <span>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-sky-50 rounded-xl p-3.5">
+                  <p className="text-xs font-bold text-sky-700 mb-2">Bonus Kecepatan Penyelesaian</p>
+                  <div className="space-y-1.5">
+                    {[['Selesai dalam 1 hari', '+5 poin', 'text-emerald-600'], ['Selesai dalam 3 hari', '+3 poin', 'text-emerald-600'], ['Selesai dalam 7 hari', '+0 poin', 'text-slate-500'], ['Lebih dari 7 hari', '-3 poin', 'text-red-500']].map(([label, val, cls]) => (
+                      <div key={label} className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-600">{label}</span>
+                        <span className={`font-bold ${cls}`}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-red-50 rounded-xl p-3.5">
+                  <p className="text-xs font-bold text-red-700 mb-2">Penalti Komplain Belum Selesai</p>
+                  <div className="space-y-1.5">
+                    {[['Belum selesai > 7 hari', '-3 poin', 'text-red-500'], ['Belum selesai > 14 hari', '-8 poin', 'text-red-600']].map(([label, val, cls]) => (
+                      <div key={label} className="flex justify-between items-center text-[11px]">
+                        <span className="text-slate-600">{label}</span>
+                        <span className={`font-bold ${cls}`}>{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 mt-3 bg-slate-50 rounded-xl p-3">
+                <Info className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-slate-500 leading-relaxed">Poin direset setiap awal bulan. Hanya komplain pada bulan berjalan yang dihitung.</p>
+              </div>
+            </div>
+
+            <div className="p-5 pt-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowPoinInfo(false)}
+                className="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition-colors"
+              >
+                Mengerti
               </button>
             </div>
           </div>
