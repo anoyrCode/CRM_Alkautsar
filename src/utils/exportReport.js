@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import * as XLSX from 'xlsx'
+import logoUrl from '../assets/logoalka.png'
 
 function buildRows(complaints) {
   return complaints.map((c, i) => [
@@ -23,26 +24,50 @@ function countStats(complaints) {
   }
 }
 
-export function exportPDF(complaints, meta) {
+async function loadLogoBase64() {
+  const response = await fetch(logoUrl)
+  const blob = await response.blob()
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result)
+    reader.onerror = reject
+    reader.readAsDataURL(blob)
+  })
+}
+
+export async function exportPDF(complaints, meta) {
   const { dateFrom, dateTo, userName, roleName, printDate } = meta
   const stats = countStats(complaints)
   const doc = new jsPDF()
 
-  // Header
-  doc.setFontSize(14)
-  doc.setFont('helvetica', 'bold')
-  doc.text('Pesantren Al-Kautsar', 14, 18)
+  // Header: logo kiri + teks kanan
+  try {
+    const logoBase64 = await loadLogoBase64()
+    doc.addImage(logoBase64, 'PNG', 14, 10, 35, 15)
+  } catch {
+    // fallback teks jika logo gagal dimuat
+    doc.setFontSize(14)
+    doc.setFont('helvetica', 'bold')
+    doc.text('Pesantren Al-Kautsar', 14, 18)
+  }
+
   doc.setFontSize(11)
-  doc.text('Laporan Komplain', 14, 26)
+  doc.setFont('helvetica', 'bold')
+  doc.text('Laporan Komplain', 55, 16)
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Periode  : ${dateFrom} s/d ${dateTo}`, 14, 33)
-  doc.text(`Dicetak  : ${userName} - ${roleName}`, 14, 39)
-  doc.text(`Tgl cetak: ${printDate}`, 14, 45)
+  doc.text(`Periode  : ${dateFrom} s/d ${dateTo}`, 55, 22)
+  doc.text(`Dicetak  : ${userName} - ${roleName}`, 55, 27)
+  doc.text(`Tgl cetak: ${printDate}`, 55, 32)
+
+  // Garis pemisah header
+  doc.setDrawColor(0, 146, 183)
+  doc.setLineWidth(0.5)
+  doc.line(14, 37, 196, 37)
 
   // Ringkasan
   autoTable(doc, {
-    startY: 52,
+    startY: 43,
     head: [['Total', 'Selesai', 'Diproses', 'Pending']],
     body: [[stats.total, stats.selesai, stats.diproses, stats.pending]],
     styles:     { fontSize: 9 },

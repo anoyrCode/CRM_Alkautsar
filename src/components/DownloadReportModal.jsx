@@ -64,7 +64,7 @@ export default function DownloadReportModal({ open, onClose }) {
         printDate: new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' }),
       }
 
-      if (format === 'pdf') exportPDF(complaints ?? [], meta)
+      if (format === 'pdf') await exportPDF(complaints ?? [], meta)
       else                  exportExcel(complaints ?? [], meta)
 
       onClose()
