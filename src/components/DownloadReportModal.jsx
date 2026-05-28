@@ -4,9 +4,8 @@ import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 import { exportPDF, exportExcel } from '../utils/exportReport'
 
-const today     = new Date()
-const firstDay  = () => new Date(today.getFullYear(), today.getMonth(), 1).toISOString().slice(0, 10)
-const lastDay   = () => new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().slice(0, 10)
+const firstDay = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10) }
+const lastDay  = () => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().slice(0, 10) }
 
 export default function DownloadReportModal({ open, onClose }) {
   const { profile } = useAuth()
@@ -21,6 +20,16 @@ export default function DownloadReportModal({ open, onClose }) {
   const handleDownload = async () => {
     setLoading(true)
     setError(null)
+    if (dateFrom > dateTo) {
+      setError('Tanggal "Dari" tidak boleh lebih besar dari "Sampai".')
+      setLoading(false)
+      return
+    }
+    if (!profile) {
+      setError('Profil pengguna tidak ditemukan.')
+      setLoading(false)
+      return
+    }
     try {
       const perms   = profile?.roles?.permissions ?? []
       const isAdmin = perms.includes('komplain_semua')
@@ -77,7 +86,7 @@ export default function DownloadReportModal({ open, onClose }) {
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-base font-bold text-slate-800">Unduh Laporan</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -85,8 +94,9 @@ export default function DownloadReportModal({ open, onClose }) {
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Dari</label>
+              <label htmlFor="date-from" className="text-xs font-semibold text-slate-600 mb-1 block">Dari</label>
               <input
+                id="date-from"
                 type="date"
                 value={dateFrom}
                 onChange={e => setDateFrom(e.target.value)}
@@ -94,8 +104,9 @@ export default function DownloadReportModal({ open, onClose }) {
               />
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">Sampai</label>
+              <label htmlFor="date-to" className="text-xs font-semibold text-slate-600 mb-1 block">Sampai</label>
               <input
+                id="date-to"
                 type="date"
                 value={dateTo}
                 onChange={e => setDateTo(e.target.value)}
@@ -108,6 +119,7 @@ export default function DownloadReportModal({ open, onClose }) {
             <label className="text-xs font-semibold text-slate-600 mb-2 block">Format</label>
             <div className="grid grid-cols-2 gap-2">
               <button
+                type="button"
                 onClick={() => setFormat('pdf')}
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-semibold transition-all ${
                   format === 'pdf'
@@ -119,6 +131,7 @@ export default function DownloadReportModal({ open, onClose }) {
                 PDF
               </button>
               <button
+                type="button"
                 onClick={() => setFormat('excel')}
                 className={`flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-semibold transition-all ${
                   format === 'excel'
@@ -136,12 +149,14 @@ export default function DownloadReportModal({ open, onClose }) {
 
           <div className="flex gap-2 mt-1">
             <button
+              type="button"
               onClick={onClose}
               className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
             >
               Batal
             </button>
             <button
+              type="button"
               onClick={handleDownload}
               disabled={loading}
               className="flex-1 py-2.5 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 disabled:opacity-60 flex items-center justify-center gap-2 transition-colors"
