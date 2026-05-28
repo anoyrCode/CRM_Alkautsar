@@ -24,15 +24,21 @@ function countStats(complaints) {
   }
 }
 
-async function loadLogoBase64() {
+async function loadLogo() {
   const response = await fetch(logoUrl)
   const blob = await response.blob()
-  return new Promise((resolve, reject) => {
+  const base64 = await new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onloadend = () => resolve(reader.result)
     reader.onerror = reject
     reader.readAsDataURL(blob)
   })
+  const dims = await new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight })
+    img.src = base64
+  })
+  return { base64, dims }
 }
 
 export async function exportPDF(complaints, meta) {
@@ -40,25 +46,26 @@ export async function exportPDF(complaints, meta) {
   const stats = countStats(complaints)
   const doc = new jsPDF()
 
-  // Header: logo kiri + teks kanan
+  // Header: logo pojok kiri, judul + info pojok kanan
   try {
-    const logoBase64 = await loadLogoBase64()
-    doc.addImage(logoBase64, 'PNG', 14, 10, 35, 15)
+    const { base64: logoBase64, dims } = await loadLogo()
+    const logoW = 28
+    const logoH = (dims.h / dims.w) * logoW
+    doc.addImage(logoBase64, 'PNG', 14, 10, logoW, logoH)
   } catch {
-    // fallback teks jika logo gagal dimuat
-    doc.setFontSize(14)
+    doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
     doc.text('Pesantren Al-Kautsar', 14, 18)
   }
 
-  doc.setFontSize(11)
+  doc.setFontSize(12)
   doc.setFont('helvetica', 'bold')
-  doc.text('Laporan Komplain', 55, 16)
-  doc.setFontSize(9)
+  doc.text('Laporan Komplain', 196, 13, { align: 'right' })
+  doc.setFontSize(8.5)
   doc.setFont('helvetica', 'normal')
-  doc.text(`Periode  : ${dateFrom} s/d ${dateTo}`, 55, 22)
-  doc.text(`Dicetak  : ${userName} - ${roleName}`, 55, 27)
-  doc.text(`Tgl cetak: ${printDate}`, 55, 32)
+  doc.text(`Periode  : ${dateFrom} s/d ${dateTo}`, 196, 20, { align: 'right' })
+  doc.text(`Dicetak  : ${userName} - ${roleName}`, 196, 26, { align: 'right' })
+  doc.text(`Tgl cetak: ${printDate}`, 196, 32, { align: 'right' })
 
   // Garis pemisah header
   doc.setDrawColor(0, 146, 183)
