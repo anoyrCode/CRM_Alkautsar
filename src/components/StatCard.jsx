@@ -1,7 +1,7 @@
-function StatCard({ label, value, delta, deltaColor = 'text-slate-400', icon: Icon, iconBg = 'bg-sky-100', iconColor = 'text-sky-600', onClick }) {
+function StatCard({ label, value, delta, deltaColor = 'text-slate-400', icon: Icon, iconBg = 'bg-sky-100', iconColor = 'text-sky-600', cardBg = 'bg-white', onClick }) {
   return (
     <div
-      className={`bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`${cardBg} rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow duration-200 ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex justify-between items-start mb-2">

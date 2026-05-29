@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { useEffect } from 'react'
 import { AuthProvider } from './context/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import Sidebarr from './components/sidebar'
@@ -8,6 +9,16 @@ import Login from './pages/auth/Login'
 import ResetPassword from './pages/auth/ResetPassword'
 import InstallPrompt from './components/InstallPrompt'
 import usePushNotification from './hooks/usePushNotification'
+
+function GATracker() {
+  const location = useLocation()
+  useEffect(() => {
+    if (typeof window.gtag === 'function') {
+      window.gtag('config', 'G-TBH8J1Z7QB', { page_path: location.pathname })
+    }
+  }, [location])
+  return null
+}
 
 function AppLayout() {
   usePushNotification()
@@ -27,6 +38,7 @@ function AppLayout() {
 function App() {
   return (
     <AuthProvider>
+      <GATracker />
       <Routes>
         <Route path="/login"          element={<Login />} />
         <Route path="/reset-password" element={<ResetPassword />} />

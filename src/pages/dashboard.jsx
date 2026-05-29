@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   UserStar, MessageSquareText, CircleCheckBig, Clock, CircleAlert,
   ChartSpline, ChartColumn, ClipboardPlus, MessageSquare, Download, Headset, Zap,
-  Activity, InboxIcon, Sparkles, Trophy, Flag, X, MessageCircle, Info
+  Activity, InboxIcon, Sparkles, Trophy, Flag, X, MessageCircle, Info, Medal
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -42,8 +42,12 @@ function Dashboard() {
   const [priorityData,   setPriorityData]   = useState({})
   const [fetching,       setFetching]       = useState(true)
   const [divisiPoin,     setDivisiPoin]     = useState(0)
+  const [divisiRank,     setDivisiRank]     = useState(0)
+  const [totalDivisi,    setTotalDivisi]    = useState(0)
+  const [rankList,       setRankList]       = useState([])
   const [isDivisiRole,   setIsDivisiRole]   = useState(false)
   const [showPoinInfo,   setShowPoinInfo]   = useState(false)
+  const [showRankInfo,   setShowRankInfo]   = useState(false)
 
   useEffect(() => {
     if (!profile) return
@@ -154,6 +158,38 @@ function Dashboard() {
         const pMap = calcDivisionPoints(monthComplaints)
         const total = Math.round(Object.values(pMap).reduce((sum, p) => sum + p, 0))
         setDivisiPoin(total)
+
+        const [rolesRes, allRes, divsRes] = await Promise.all([
+          supabase.from('roles').select('id, name'),
+          supabase.from('complaints').select('priority, status, created_at, resolved_at, categories(assigned_role_id)'),
+          supabase.from('categories').select('assigned_role_id').not('assigned_role_id', 'is', null),
+        ])
+
+        const rolesMap     = Object.fromEntries((rolesRes.data ?? []).map(r => [r.id, r.name]))
+        const allComplaints = allRes.data ?? []
+        const allRoleIds    = [...new Set((divsRes.data ?? []).map(c => c.assigned_role_id))]
+        const monthAll      = allComplaints.filter(c => {
+          const d = new Date(c.created_at)
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+        })
+
+        const rolePoints = Object.fromEntries(allRoleIds.map(id => [id, 0]))
+        const mapped = monthAll.map(c => ({
+          ...c,
+          categories: { name: String(c.categories?.assigned_role_id ?? '') },
+        }))
+        const pointsByRoleId = calcDivisionPoints(mapped)
+        Object.entries(pointsByRoleId).forEach(([rid, pts]) => {
+          if (rolePoints[rid] !== undefined) rolePoints[rid] = pts
+        })
+
+        const sorted = Object.entries(rolePoints)
+          .map(([rid, pts]) => ({ roleId: Number(rid), name: rolesMap[rid] ?? 'Divisi', points: Math.round(pts) }))
+          .sort((a, b) => b.points - a.points)
+        const rank = sorted.findIndex(r => r.roleId === profile.role_id) + 1
+        setDivisiRank(rank)
+        setTotalDivisi(allRoleIds.length)
+        setRankList(sorted)
       }
 
       // Bar — Mei s/d Oktober tahun berjalan
@@ -203,8 +239,34 @@ function Dashboard() {
         {STATS.map(s => <StatCard key={s.label} {...s} />)}
       </div>
 
+      {isDivisiRole && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <StatCard
+            label="Poin Divisi Bulan Ini"
+            value={divisiPoin}
+            delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
+            deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
+            icon={Trophy}
+            iconBg="bg-amber-100"
+            iconColor="text-amber-600"
+            cardBg="bg-linear-to-br from-amber-100 via-amber-50 to-white"
+            onClick={() => setShowPoinInfo(true)}
+          />
+          <StatCard
+            label="Peringkat Divisi"
+            value={divisiRank > 0 ? `#${divisiRank}` : '—'}
+            delta={totalDivisi > 0 ? `dari ${totalDivisi} divisi` : 'belum ada peringkat'}
+            deltaColor={divisiRank === 1 ? 'text-emerald-600' : divisiRank <= 3 ? 'text-sky-600' : 'text-slate-400'}
+            icon={Medal}
+            iconBg={divisiRank === 1 ? 'bg-emerald-100' : divisiRank <= 3 ? 'bg-sky-100' : 'bg-slate-100'}
+            iconColor={divisiRank === 1 ? 'text-emerald-600' : divisiRank <= 3 ? 'text-sky-600' : 'text-slate-400'}
+            cardBg="bg-linear-to-br from-sky-100 via-sky-50 to-white"
+            onClick={() => setShowRankInfo(true)}
+          />
+        </div>
+      )}
 
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <ChartSpline className="w-4 h-4 text-sky-600" />
@@ -236,21 +298,6 @@ function Dashboard() {
           </div>
         </div>
       </div>
-
-      {isDivisiRole && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard
-            label="Poin Divisi Bulan Ini"
-            value={divisiPoin}
-            delta={divisiPoin >= 0 ? `+${divisiPoin} poin bulan ini` : `${divisiPoin} poin bulan ini`}
-            deltaColor={divisiPoin >= 50 ? 'text-emerald-600' : divisiPoin >= 0 ? 'text-amber-500' : 'text-red-500'}
-            icon={Trophy}
-            iconBg="bg-amber-100"
-            iconColor="text-amber-600"
-            onClick={() => setShowPoinInfo(true)}
-          />
-        </div>
-      )}
 
       {(profile?.roles?.permissions ?? []).includes('komplain_semua') && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -393,6 +440,74 @@ function Dashboard() {
                 <MessageCircle className="w-4 h-4" />
                 Chat via WhatsApp
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showRankInfo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowRankInfo(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-5 pb-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center">
+                  <Medal className="w-4 h-4 text-sky-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">Peringkat Divisi</h2>
+                  <p className="text-[11px] text-slate-400">{new Date().toLocaleDateString('id-ID', { month: 'long', year: 'numeric' })}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowRankInfo(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto px-5 pb-5">
+              {rankList.length === 0 ? (
+                <div className="text-center py-8 text-sm text-slate-400">Belum ada data peringkat</div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {rankList.map((r, i) => {
+                    const isCurrent = r.roleId === profile.role_id
+                    const rankNum   = i + 1
+                    const medalCls  = rankNum === 1 ? 'bg-amber-100 text-amber-700'
+                                    : rankNum === 2 ? 'bg-slate-200 text-slate-700'
+                                    : rankNum === 3 ? 'bg-orange-100 text-orange-700'
+                                    : 'bg-slate-50 text-slate-500'
+                    const pointCls  = r.points >= 50 ? 'text-emerald-600'
+                                    : r.points >= 0  ? 'text-amber-500'
+                                    : 'text-red-500'
+                    return (
+                      <div
+                        key={r.roleId}
+                        className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                          isCurrent ? 'bg-sky-50 border-sky-200' : 'bg-white border-slate-100'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${medalCls}`}>
+                          {rankNum}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-800 truncate">{r.name}</span>
+                            {isCurrent && <span className="text-[10px] font-bold text-sky-600 bg-sky-100 px-1.5 py-0.5 rounded">Anda</span>}
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className={`text-sm font-bold ${pointCls}`}>{r.points >= 0 ? `+${r.points}` : r.points}</p>
+                          <p className="text-[10px] text-slate-400">poin</p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div className="flex items-start gap-2 mt-4 bg-slate-50 rounded-xl p-3">
+                <Info className="w-3.5 h-3.5 text-slate-400 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-slate-500 leading-relaxed">Peringkat dihitung berdasarkan poin bulan berjalan. Reset setiap awal bulan.</p>
+              </div>
             </div>
           </div>
         </div>

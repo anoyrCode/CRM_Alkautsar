@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft, Paperclip, Download, FileImage, FileType } from 'lucide-react'
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft, Paperclip, Download, FileImage, FileType, Pencil, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
 import SearchFilterBar from '../components/SearchFilterBar'
 import DataTable from '../components/DataTable'
+import EditComplaintModal from '../components/EditComplaintModal'
+import DeleteComplaintModal from '../components/DeleteComplaintModal'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
@@ -352,8 +354,12 @@ function CompliantData() {
   const [fetching,       setFetching]       = useState(true)
   const [editComplaint,  setEditComplaint]  = useState(null)
   const [detailComplaint, setDetailComplaint] = useState(null)
+  const [editFull,       setEditFull]       = useState(null)
+  const [deleteTarget,   setDeleteTarget]   = useState(null)
   const [search,         setSearch]         = useState('')
   const [filterValues,   setFilterValues]   = useState({ status: '' })
+
+  const isAdmin = (profile?.roles?.permissions ?? []).includes('komplain_semua')
 
   useEffect(() => {
     if (!profile) return
@@ -401,6 +407,21 @@ function CompliantData() {
   const handleStatusSaved = (id, newStatus) => {
     setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c))
     setEditComplaint(null)
+  }
+
+  const handleEditSaved = async (id, _payload) => {
+    const { data } = await supabase
+      .from('complaints')
+      .select('*, reporter:profiles!reporter_id(full_name), categories(name, assigned_role:roles!assigned_role_id(name))')
+      .eq('id', id)
+      .single()
+    setComplaints(prev => prev.map(c => c.id === id ? (data ?? c) : c))
+    setEditFull(null)
+  }
+
+  const handleDeleted = id => {
+    setComplaints(prev => prev.filter(c => c.id !== id))
+    setDeleteTarget(null)
   }
 
   const handleFilterChange = (name, val) => setFilterValues(prev => ({ ...prev, [name]: val }))
@@ -451,6 +472,24 @@ function CompliantData() {
         >
           <Eye className="w-3.5 h-3.5 text-sky-600" />
         </button>
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setEditFull(row)}
+              className="w-7 h-7 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center justify-center transition-colors"
+              title="Edit Komplain"
+            >
+              <Pencil className="w-3.5 h-3.5 text-amber-600" />
+            </button>
+            <button
+              onClick={() => setDeleteTarget(row)}
+              className="w-7 h-7 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors"
+              title="Hapus"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-red-600" />
+            </button>
+          </>
+        )}
       </div>
     )},
   ]
@@ -500,6 +539,26 @@ function CompliantData() {
             complaint={editComplaint}
             onClose={() => setEditComplaint(null)}
             onSave={handleStatusSaved}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {editFull && (
+          <EditComplaintModal
+            complaint={editFull}
+            onClose={() => setEditFull(null)}
+            onSave={handleEditSaved}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {deleteTarget && (
+          <DeleteComplaintModal
+            complaint={deleteTarget}
+            onClose={() => setDeleteTarget(null)}
+            onDelete={handleDeleted}
           />
         )}
       </AnimatePresence>
