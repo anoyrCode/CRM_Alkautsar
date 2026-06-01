@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
-const PAGE_SIZE = 10
-
 function getPageNumbers(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
   const pages = [1]
@@ -15,16 +13,16 @@ function getPageNumbers(current, total) {
   return pages
 }
 
-function DataTable({ columns = [], data = [] }) {
+function DataTable({ columns = [], data = [], pageSize = 10 }) {
   const [page, setPage] = useState(1)
 
   // reset ke halaman 1 setiap kali data berubah (search/filter)
   useEffect(() => { setPage(1) }, [data])
 
-  const totalPages = Math.max(1, Math.ceil(data.length / PAGE_SIZE))
-  const start      = (page - 1) * PAGE_SIZE
-  const pageData   = data.slice(start, start + PAGE_SIZE)
-  const showPager  = data.length > PAGE_SIZE
+  const totalPages = Math.max(1, Math.ceil(data.length / pageSize))
+  const start      = (page - 1) * pageSize
+  const pageData   = data.slice(start, start + pageSize)
+  const showPager  = data.length > pageSize
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-x-auto">
@@ -62,7 +60,7 @@ function DataTable({ columns = [], data = [] }) {
       {showPager && (
         <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100">
           <span className="text-xs text-slate-400">
-            Menampilkan {start + 1}–{Math.min(start + PAGE_SIZE, data.length)} dari {data.length} data
+            Menampilkan {start + 1}–{Math.min(start + pageSize, data.length)} dari {data.length} data
           </span>
 
           <div className="flex items-center gap-1">
