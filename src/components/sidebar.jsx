@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, ClipboardPlus, Database, MessageSquare,
-  ChartColumnStacked, User, UserCog, LogOut
+  ChartColumnStacked, User, UserCog, LogOut, ScrollText
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
@@ -30,8 +30,9 @@ function Sidebarr() {
   ].filter(Boolean)
 
   const settingsMenu = [
-    has('kelola_users') && { to: '/Users', icon: User,    label: 'Users' },
-    has('kelola_role')  && { to: '/Role',  icon: UserCog, label: 'Role' },
+    has('kelola_users') && { to: '/Users',         icon: User,       label: 'Users' },
+    has('kelola_role')  && { to: '/Role',           icon: UserCog,    label: 'Role' },
+    has('kelola_users') && { to: '/Log Aktivitas',  icon: ScrollText, label: 'Log Aktivitas' },
   ].filter(Boolean)
 
   return (

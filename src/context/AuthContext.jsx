@@ -34,7 +34,21 @@ export function AuthProvider({ children }) {
   }, [])
 
   const signIn = async (email, password) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (!error && data?.user) {
+      supabase.from('profiles').select('full_name, roles(name)').eq('id', data.user.id).single()
+        .then(({ data: p }) => {
+          const roleName = p?.roles?.name ?? '-'
+          if (roleName === 'Admin' || roleName === 'SuperAdmin') return
+          supabase.from('activity_logs').insert({
+            user_id:   data.user.id,
+            full_name: p?.full_name ?? email,
+            role_name: roleName,
+            action:    'login',
+            page:      null,
+          })
+        })
+    }
     return { error }
   }
 

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, LayoutDashboard, ClipboardPlus, Database, MessageSquare,
-  ChartColumnStacked, User, UserCog, LogOut
+  ChartColumnStacked, User, UserCog, LogOut, ScrollText
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import logo from '../assets/logo.png'
@@ -28,8 +28,9 @@ function NavSidebar({ isOpen, onClose }) {
   ].filter(Boolean)
 
   const settingsMenu = [
-    has('kelola_users') && { to: '/Users', icon: User,    label: 'Users' },
-    has('kelola_role')  && { to: '/Role',  icon: UserCog, label: 'Role' },
+    has('kelola_users') && { to: '/Users',        icon: User,       label: 'Users' },
+    has('kelola_role')  && { to: '/Role',          icon: UserCog,    label: 'Role' },
+    has('kelola_users') && { to: '/Log Aktivitas', icon: ScrollText, label: 'Log Aktivitas' },
   ].filter(Boolean)
 
   const initials = profile?.full_name

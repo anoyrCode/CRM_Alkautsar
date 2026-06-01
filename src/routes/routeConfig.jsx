@@ -7,6 +7,7 @@ import CreateComplaint from "../pages/createComplaint"
 import MyComplaint from "../pages/myComplaint"
 import Users from "../pages/users"
 import Role from "../pages/role"
+import ActivityLogPage from "../pages/activityLog"
 
 function Guard({ perm, perms, children }) {
   const { profile } = useAuth()
@@ -25,9 +26,10 @@ function RouteConfig() {
       <Route path="/Buat Laporan"  element={<Guard perm="buat_laporan"><CreateComplaint /></Guard>} />
       <Route path="/Data Komplain" element={<Guard perms={['komplain_semua','komplain_diterima']}><CompliantData /></Guard>} />
       <Route path="/Laporan Saya"  element={<Guard perm="laporan_saya"><MyComplaint /></Guard>} />
-      <Route path="/Kategori"      element={<Guard perm="kelola_kategori"><Category /></Guard>} />
-      <Route path="/Users"         element={<Guard perm="kelola_users"><Users /></Guard>} />
-      <Route path="/Role"          element={<Guard perm="kelola_role"><Role /></Guard>} />
+      <Route path="/Kategori"        element={<Guard perm="kelola_kategori"><Category /></Guard>} />
+      <Route path="/Users"           element={<Guard perm="kelola_users"><Users /></Guard>} />
+      <Route path="/Role"            element={<Guard perm="kelola_role"><Role /></Guard>} />
+      <Route path="/Log Aktivitas"   element={<Guard perm="kelola_users"><ActivityLogPage /></Guard>} />
     </Routes>
   )
 }
