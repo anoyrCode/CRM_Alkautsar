@@ -105,7 +105,8 @@ function Category() {
     setError('')
 
     if (modal.mode === 'create') {
-      const { error } = await supabase.from('categories').insert({ name, description, assigned_role_id })
+      const nextCode = `K${String(categories.length + 1).padStart(3, '0')}`
+      const { error } = await supabase.from('categories').insert({ name, description, assigned_role_id, code: nextCode })
       if (error) { setError(error.message); setSaving(false); return }
     } else {
       const { error } = await supabase

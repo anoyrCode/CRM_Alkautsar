@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Pencil, Trash2 } from 'lucide-react'
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Pencil, Trash2, FileText, X, Tag, Calendar, AlignLeft, MapPin } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
@@ -50,6 +50,112 @@ const FILTERS = [
   ]},
 ]
 
+function DetailModal({ complaint, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
+        className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-sky-100 rounded-lg flex items-center justify-center shrink-0">
+              <FileText className="w-4 h-4 text-sky-600" />
+            </div>
+            <div>
+              <p className="font-bold text-slate-800 text-sm leading-tight">{complaint.ticket_id}</p>
+              <p className="text-xs text-slate-400">Detail Laporan</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-5 py-4 flex flex-col gap-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-800 mb-2 leading-snug">{complaint.title}</h3>
+            <div className="flex flex-wrap gap-2">
+              <StatusBadge status={complaint.status} />
+              <PriorityBadge priority={complaint.priority} />
+            </div>
+          </div>
+
+          <div className="bg-slate-50 rounded-xl p-4 flex flex-col gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                <Tag className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Kategori</p>
+                <p className="text-sm font-semibold text-slate-700">{complaint.categories?.name ?? '—'}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-400">Tanggal Dibuat</p>
+                <p className="text-sm font-semibold text-slate-700">
+                  {complaint.created_at
+                    ? new Date(complaint.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '—'}
+                </p>
+              </div>
+            </div>
+            {complaint.location && (
+              <div className="flex items-start gap-3">
+                <div className="w-7 h-7 rounded-lg bg-white border border-slate-200 flex items-center justify-center shrink-0 mt-0.5">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">Lokasi</p>
+                  <p className="text-sm font-semibold text-slate-700">{complaint.location}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+              <AlignLeft className="w-3.5 h-3.5" />Deskripsi
+            </p>
+            <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
+              {complaint.description || 'Tidak ada deskripsi.'}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+              <MessageSquareText className="w-3.5 h-3.5" />Catatan Penangan
+            </p>
+            <p className="text-sm bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
+              {complaint.handler_notes
+                ? <span className="text-slate-600">{complaint.handler_notes}</span>
+                : <span className="text-slate-400 italic">Belum ada catatan dari penangan.</span>
+              }
+            </p>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-slate-100 shrink-0">
+          <button
+            onClick={onClose}
+            className="w-full border border-slate-200 text-slate-600 text-sm font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Tutup
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
 function MyComplaint() {
   const { profile }  = useAuth()
   const [complaints, setComplaints] = useState([])
@@ -58,6 +164,7 @@ function MyComplaint() {
   const [filterValues, setFilterValues] = useState({ status: '' })
   const [editTarget,   setEditTarget]   = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [detailTarget, setDetailTarget] = useState(null)
 
   useEffect(() => {
     if (!profile?.id) return
@@ -114,25 +221,33 @@ function MyComplaint() {
     { key: 'created_at',  label: 'Tanggal',   render: v => <span className="text-slate-400 text-xs">{v ? new Date(v).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}</span> },
     { key: 'aksi', label: 'Aksi', render: (_, row) => {
       const editable = row.status === 'Pending' || row.status === 'Diproses'
-      if (!editable) {
-        return <span className="text-[11px] text-slate-300 italic">Terkunci</span>
-      }
       return (
         <div className="flex gap-1.5">
           <button
-            onClick={() => setEditTarget(row)}
-            className="w-7 h-7 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center justify-center transition-colors"
-            title="Edit Komplain"
+            onClick={() => setDetailTarget(row)}
+            className="w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
+            title="Lihat Detail"
           >
-            <Pencil className="w-3.5 h-3.5 text-amber-600" />
+            <FileText className="w-3.5 h-3.5 text-slate-500" />
           </button>
-          <button
-            onClick={() => setDeleteTarget(row)}
-            className="w-7 h-7 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors"
-            title="Hapus"
-          >
-            <Trash2 className="w-3.5 h-3.5 text-red-600" />
-          </button>
+          {editable && (
+            <>
+              <button
+                onClick={() => setEditTarget(row)}
+                className="w-7 h-7 bg-amber-50 hover:bg-amber-100 rounded-lg flex items-center justify-center transition-colors"
+                title="Edit Komplain"
+              >
+                <Pencil className="w-3.5 h-3.5 text-amber-600" />
+              </button>
+              <button
+                onClick={() => setDeleteTarget(row)}
+                className="w-7 h-7 bg-red-50 hover:bg-red-100 rounded-lg flex items-center justify-center transition-colors"
+                title="Hapus"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-600" />
+              </button>
+            </>
+          )}
         </div>
       )
     }},
@@ -172,6 +287,15 @@ function MyComplaint() {
       ) : (
         <DataTable columns={COLUMNS} data={filtered} />
       )}
+
+      <AnimatePresence>
+        {detailTarget && (
+          <DetailModal
+            complaint={detailTarget}
+            onClose={() => setDetailTarget(null)}
+          />
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {editTarget && (

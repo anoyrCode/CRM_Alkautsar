@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft, Paperclip, Download, FileImage, FileType, Pencil, Trash2 } from 'lucide-react'
+import { MessageSquareText, CircleCheckBig, Clock, CircleAlert, Eye, X, ShieldCheck, FileText, Building2, User as UserIcon, Calendar, Tag, AlignLeft, Paperclip, Download, FileImage, FileType, Pencil, Trash2, MapPin } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import StatCard from '../components/StatCard'
 import PageHeader from '../components/PageHeader'
@@ -128,6 +128,7 @@ function DetailModal({ complaint, onClose }) {
     { label: 'Tanggal Dibuat', value: complaint.created_at
         ? new Date(complaint.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
         : '—', Icon: Calendar },
+    ...(complaint.location ? [{ label: 'Lokasi', value: complaint.location, Icon: MapPin }] : []),
   ]
 
   return (
@@ -189,6 +190,19 @@ function DetailModal({ complaint, onClose }) {
             </p>
             <p className="text-sm text-slate-600 bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
               {complaint.description || 'Tidak ada deskripsi.'}
+            </p>
+          </div>
+
+          {/* Catatan Penangan */}
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
+              <MessageSquareText className="w-3.5 h-3.5" />Catatan Penangan
+            </p>
+            <p className="text-sm bg-slate-50 rounded-xl p-4 leading-relaxed whitespace-pre-wrap">
+              {complaint.handler_notes
+                ? <span className="text-slate-600">{complaint.handler_notes}</span>
+                : <span className="text-slate-400 italic">Belum ada catatan dari penangan.</span>
+              }
             </p>
           </div>
 
@@ -254,22 +268,23 @@ function DetailModal({ complaint, onClose }) {
   )
 }
 
-function EditStatusModal({ complaint, onClose, onSave }) {
-  const [status,  setStatus]  = useState(complaint.status)
-  const [saving,  setSaving]  = useState(false)
-  const [errMsg,  setErrMsg]  = useState('')
-  const [confirm, setConfirm] = useState(false)
+function EditStatusModal({ complaint, onClose, onSave, canAddNotes }) {
+  const [status,       setStatus]       = useState(complaint.status)
+  const [handlerNotes, setHandlerNotes] = useState(complaint.handler_notes ?? '')
+  const [saving,       setSaving]       = useState(false)
+  const [errMsg,       setErrMsg]       = useState('')
+  const [confirm,      setConfirm]      = useState(false)
 
   const doSave = async () => {
     setSaving(true)
     setErrMsg('')
     const { error } = await supabase
       .from('complaints')
-      .update({ status })
+      .update({ status, handler_notes: handlerNotes })
       .eq('id', complaint.id)
     setSaving(false)
     if (error) { setErrMsg(error.message); setConfirm(false); return }
-    onSave(complaint.id, status)
+    onSave(complaint.id, status, handlerNotes)
   }
 
   const handleSave = () => {
@@ -321,6 +336,18 @@ function EditStatusModal({ complaint, onClose, onSave }) {
               ))}
             </div>
           </div>
+          {canAddNotes && (
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Catatan Penangan <span className="font-normal text-slate-400">(opsional)</span></label>
+              <textarea
+                value={handlerNotes}
+                onChange={e => setHandlerNotes(e.target.value)}
+                rows={3}
+                placeholder="Tambahkan catatan progress atau keterangan penanganan..."
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 resize-none focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent placeholder:text-slate-300"
+              />
+            </div>
+          )}
         </div>
         {errMsg && <div className="mx-5 mb-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2">{errMsg}</div>}
         <div className="flex gap-3 px-5 pb-5">
@@ -404,8 +431,8 @@ function CompliantData() {
     load()
   }, [profile])
 
-  const handleStatusSaved = (id, newStatus) => {
-    setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus } : c))
+  const handleStatusSaved = (id, newStatus, newNotes) => {
+    setComplaints(prev => prev.map(c => c.id === id ? { ...c, status: newStatus, handler_notes: newNotes } : c))
     setEditComplaint(null)
   }
 
@@ -539,6 +566,7 @@ function CompliantData() {
             complaint={editComplaint}
             onClose={() => setEditComplaint(null)}
             onSave={handleStatusSaved}
+            canAddNotes={!isAdmin}
           />
         )}
       </AnimatePresence>

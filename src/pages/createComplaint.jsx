@@ -1,5 +1,5 @@
 import {
-  User, Mail, ChartBarStacked, CircleGauge, ReceiptText, Link2, Send
+  User, Mail, ChartBarStacked, CircleGauge, ReceiptText, Link2, Send, MapPin
 } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -91,6 +91,7 @@ function CreateComplaint() {
   const [title,      setTitle]      = useState('')
   const [priority,   setPriority]   = useState('')
   const [detail,     setDetail]     = useState('')
+  const [location,   setLocation]   = useState('')
   const [files,      setFiles]      = useState([])
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState('')
@@ -101,8 +102,8 @@ function CreateComplaint() {
 
   const handleSubmit = async e => {
     e.preventDefault()
-    if (!title.trim() || !categoryId || !priority || detail.trim().length < 20) {
-      setError('Lengkapi semua field. Deskripsi minimal 20 karakter.')
+    if (!title.trim() || !categoryId || !priority || detail.trim().length < 10) {
+      setError('Lengkapi semua field. Deskripsi minimal 10 karakter.')
       return
     }
 
@@ -117,6 +118,7 @@ function CreateComplaint() {
         category_id:  categoryId,
         priority,
         description:  detail.trim(),
+        location:     location.trim() || null,
         status:       'Pending',
       })
       .select('id')
@@ -234,8 +236,21 @@ function CreateComplaint() {
                 value={detail}
                 onChange={e => setDetail(e.target.value)}
                 rows={6}
-                placeholder="Jelaskan masalah Anda secara detail... (minimal 20 karakter)"
+                placeholder="Jelaskan masalah Anda secara detail... (minimal 10 karakter)"
                 className={`${inputClass} resize-none`}
+              />
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 mb-1.5">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                <span className="text-xs font-semibold text-slate-500">Lokasi <span className="font-normal text-slate-400">(opsional)</span></span>
+              </label>
+              <input
+                type="text"
+                value={location}
+                onChange={e => setLocation(e.target.value)}
+                placeholder="Contoh: Gedung A Lt. 2, Asrama Putra Blok B, ..."
+                className={inputClass}
               />
             </div>
           </div>
