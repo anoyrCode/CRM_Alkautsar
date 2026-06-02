@@ -157,7 +157,7 @@ function Role() {
 
   const COLUMNS = [
     { key: 'name',        label: 'Nama Role',  render: v => <span className="font-semibold text-slate-800">{v}</span> },
-    { key: 'description', label: 'Deskripsi',  render: v => <span className="text-slate-400 text-xs">{v ?? '—'}</span> },
+    { key: 'description', label: 'Deskripsi',  render: v => <span className="block max-w-55 truncate text-slate-400 text-xs" title={v ?? ''}>{v ?? '—'}</span> },
     {
       key: 'permissions', label: 'Hak Akses',
       render: v => {

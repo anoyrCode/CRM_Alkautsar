@@ -20,7 +20,11 @@ function EditComplaintModal({ complaint, onClose, onSave }) {
   const [error,       setError]       = useState('')
 
   useEffect(() => {
-    supabase.from('categories').select('id, name').order('name').then(({ data }) => setCategories(data ?? []))
+    supabase
+      .from('categories')
+      .select('id, name, assigned_role:roles!assigned_role_id(name)')
+      .order('name')
+      .then(({ data }) => setCategories(data ?? []))
   }, [])
 
   const handleSave = async () => {
@@ -93,7 +97,11 @@ function EditComplaintModal({ complaint, onClose, onSave }) {
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-400 transition-all appearance-none cursor-pointer"
               >
                 <option value="">Pilih kategori</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.assigned_role?.name ? ` — ${c.assigned_role.name}` : ''}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

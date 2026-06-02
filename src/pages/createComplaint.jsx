@@ -97,7 +97,11 @@ function CreateComplaint() {
   const [error,      setError]      = useState('')
 
   useEffect(() => {
-    supabase.from('categories').select('id, name').order('name').then(({ data }) => setCategories(data ?? []))
+    supabase
+      .from('categories')
+      .select('id, name, assigned_role:roles!assigned_role_id(name)')
+      .order('name')
+      .then(({ data }) => setCategories(data ?? []))
   }, [])
 
   const handleSubmit = async e => {
@@ -196,7 +200,11 @@ function CreateComplaint() {
                 </label>
                 <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={`${inputClass} cursor-pointer appearance-none`}>
                   <option value="">Pilih kategori komplain</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  {categories.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}{c.assigned_role?.name ? ` — ${c.assigned_role.name}` : ''}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>

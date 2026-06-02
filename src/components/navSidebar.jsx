@@ -57,7 +57,7 @@ function NavSidebar({ isOpen, onClose }) {
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <img src={logo} alt="logo" className="w-8 h-8" />
+                <img src={logo} alt="logo" className="w-8 h-auto" />
                 <div>
                   <p className="font-bold text-slate-800 text-sm leading-tight">
                     CRM <span className="text-sky-500">Al-Kautsar</span>

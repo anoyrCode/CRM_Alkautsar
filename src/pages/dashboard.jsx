@@ -186,10 +186,24 @@ function Dashboard() {
         const sorted = Object.entries(rolePoints)
           .map(([rid, pts]) => ({ roleId: Number(rid), name: rolesMap[rid] ?? 'Divisi', points: Math.round(pts) }))
           .sort((a, b) => b.points - a.points)
-        const rank = sorted.findIndex(r => r.roleId === profile.role_id) + 1
-        setDivisiRank(rank)
+
+        let curRank   = 0
+        let lastPts   = null
+        const rankedList = sorted.map((r, i) => {
+          if (r.points !== lastPts) {
+            curRank = i + 1
+            lastPts = r.points
+          }
+          return { ...r, rank: curRank }
+        })
+
+        const myEntry  = rankedList.find(r => r.roleId === profile.role_id)
+        const myPoints = myEntry?.points ?? 0
+        const finalRank = myPoints === 0 ? 0 : (myEntry?.rank ?? 0)
+
+        setDivisiRank(finalRank)
         setTotalDivisi(allRoleIds.length)
-        setRankList(sorted)
+        setRankList(rankedList)
       }
 
       // Bar — Mei s/d Oktober tahun berjalan
@@ -255,8 +269,8 @@ function Dashboard() {
           <StatCard
             label="Peringkat Divisi"
             value={divisiRank > 0 ? `#${divisiRank}` : '—'}
-            delta={totalDivisi > 0 ? `dari ${totalDivisi} divisi` : 'belum ada peringkat'}
-            deltaColor={divisiRank === 1 ? 'text-emerald-600' : divisiRank <= 3 ? 'text-sky-600' : 'text-slate-400'}
+            delta={divisiRank > 0 ? `dari ${totalDivisi} divisi` : 'Belum ada poin bulan ini'}
+            deltaColor={divisiRank === 1 ? 'text-emerald-600' : divisiRank > 0 && divisiRank <= 3 ? 'text-sky-600' : 'text-slate-400'}
             icon={Medal}
             iconBg={divisiRank === 1 ? 'bg-emerald-100' : divisiRank <= 3 ? 'bg-sky-100' : 'bg-slate-100'}
             iconColor={divisiRank === 1 ? 'text-emerald-600' : divisiRank <= 3 ? 'text-sky-600' : 'text-slate-400'}
@@ -468,9 +482,9 @@ function Dashboard() {
                 <div className="text-center py-8 text-sm text-slate-400">Belum ada data peringkat</div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  {rankList.map((r, i) => {
+                  {rankList.map(r => {
                     const isCurrent = r.roleId === profile.role_id
-                    const rankNum   = i + 1
+                    const rankNum   = r.rank
                     const medalCls  = rankNum === 1 ? 'bg-amber-100 text-amber-700'
                                     : rankNum === 2 ? 'bg-slate-200 text-slate-700'
                                     : rankNum === 3 ? 'bg-orange-100 text-orange-700'

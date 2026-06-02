@@ -15,6 +15,23 @@ export function AuthProvider({ children }) {
       .eq('id', userId)
       .single()
     setProfile(data)
+
+    // Catat login HANYA bila ini hasil login eksplisit (flag di-set oleh signIn),
+    // bukan restore session saat refresh. Dijalankan di sini agar profil (role) sudah tersedia
+    // dan tidak terputus oleh redirect halaman login.
+    if (data && sessionStorage.getItem('pending_login_log') === '1') {
+      sessionStorage.removeItem('pending_login_log')
+      const roleName = data.roles?.name ?? '-'
+      if (roleName !== 'Admin' && roleName !== 'SuperAdmin') {
+        supabase.from('activity_logs').insert({
+          user_id:   userId,
+          full_name: data.full_name ?? '',
+          role_name: roleName,
+          action:    'login',
+          page:      null,
+        }).then(({ error }) => { if (error) console.error('[login log]', error) })
+      }
+    }
   }
 
   useEffect(() => {
@@ -34,21 +51,11 @@ export function AuthProvider({ children }) {
   }, [])
 
   const signIn = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-    if (!error && data?.user) {
-      supabase.from('profiles').select('full_name, roles(name)').eq('id', data.user.id).single()
-        .then(({ data: p }) => {
-          const roleName = p?.roles?.name ?? '-'
-          if (roleName === 'Admin' || roleName === 'SuperAdmin') return
-          supabase.from('activity_logs').insert({
-            user_id:   data.user.id,
-            full_name: p?.full_name ?? email,
-            role_name: roleName,
-            action:    'login',
-            page:      null,
-          })
-        })
-    }
+    // Set flag SEBELUM login agar pasti tersedia saat onAuthStateChange -> fetchProfile
+    // mengeceknya (menghindari race condition). Dibersihkan lagi jika login gagal.
+    sessionStorage.setItem('pending_login_log', '1')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) sessionStorage.removeItem('pending_login_log')
     return { error }
   }
 
