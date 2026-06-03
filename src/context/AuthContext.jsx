@@ -34,6 +34,18 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Re-fetch profile tanpa mencatat ulang log login. Dipakai setelah user
+  // mengubah datanya sendiri (mis. nama panggilan) agar UI update seketika.
+  const refreshProfile = async () => {
+    if (!user?.id) return
+    const { data } = await supabase
+      .from('profiles')
+      .select('*, roles(*)')
+      .eq('id', user.id)
+      .single()
+    if (data) setProfile(data)
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
@@ -84,7 +96,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   )
