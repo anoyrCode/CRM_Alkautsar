@@ -242,7 +242,7 @@ function Dashboard() {
       transition={{ duration: 0.4 }}
     >
       <PageHeader
-        title={`Selamat datang, ${profile?.full_name ?? '...'}`}
+        title={`Selamat datang, ${profile?.nickname || profile?.full_name || '...'}`}
         titleIcon={Sparkles}
         subtitle="Berikut pembaruan rekapitulasi komplain saat ini"
         badge={profile?.roles?.name ?? 'User'}
