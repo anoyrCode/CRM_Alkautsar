@@ -1,23 +1,20 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { X, Pencil } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
 
+// Wrapper: form di-mount ulang setiap modal dibuka sehingga prefill cukup lewat
+// useState awal (tanpa useEffect/setState-in-effect).
 function EditNicknameModal({ open, onClose }) {
+  if (!open) return null
+  return <NicknameForm onClose={onClose} />
+}
+
+function NicknameForm({ onClose }) {
   const { user, profile, refreshProfile } = useAuth()
-  const [value, setValue]   = useState('')
+  const [value, setValue]   = useState(profile?.nickname ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError]   = useState('')
-
-  // Prefill saat modal dibuka
-  useEffect(() => {
-    if (open) {
-      setValue(profile?.nickname ?? '')
-      setError('')
-    }
-  }, [open, profile?.nickname])
-
-  if (!open) return null
 
   const handleSave = async () => {
     if (!user?.id) {
@@ -102,3 +99,4 @@ function EditNicknameModal({ open, onClose }) {
 }
 
 export default EditNicknameModal
+
