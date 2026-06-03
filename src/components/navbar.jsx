@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { Menu, Bell, Check } from 'lucide-react'
+import { Menu, Bell, Check, Pencil } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useNotifications } from '../hooks/useNotifications'
 import NotificationToast from './NotificationToast'
+import EditNicknameModal from './EditNicknameModal'
 
 const PAGE_LABELS = {
   '/': 'Dashboard',
@@ -32,12 +33,17 @@ function Navbar({ onMenuClick }) {
   const { notifications, unreadCount, markAllRead, markOneRead, toast, setToast } = useNotifications()
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef(null)
+  const [accountOpen, setAccountOpen]     = useState(false)
+  const [showNickModal, setShowNickModal] = useState(false)
+  const accountRef = useRef(null)
 
   const path      = decodeURIComponent(location.pathname)
   const pageLabel = PAGE_LABELS[path] ?? path.slice(1)
   const initials  = profile?.full_name
     ? profile.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : '?'
+  const displayName = profile?.nickname || profile?.full_name || 'Pengguna'
+  const roleName    = profile?.roles?.name ?? 'User'
 
   // Tutup dropdown saat klik di luar
   useEffect(() => {
@@ -48,6 +54,16 @@ function Navbar({ onMenuClick }) {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  // Tutup dropdown akun saat klik di luar
+  useEffect(() => {
+    if (!accountOpen) return
+    const handler = e => {
+      if (accountRef.current && !accountRef.current.contains(e.target)) setAccountOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [accountOpen])
 
   return (
     <>
@@ -127,12 +143,34 @@ function Navbar({ onMenuClick }) {
           )}
         </div>
 
-        {/* Avatar */}
-        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-sky-500 to-sky-400 flex items-center justify-center text-white text-xs font-bold">
-          {initials}
+        {/* Avatar + dropdown akun */}
+        <div className="relative" ref={accountRef}>
+          <button
+            onClick={() => setAccountOpen(v => !v)}
+            className="w-8 h-8 rounded-lg bg-linear-to-br from-sky-500 to-sky-400 flex items-center justify-center text-white text-xs font-bold hover:opacity-90 transition-opacity"
+          >
+            {initials}
+          </button>
+
+          {accountOpen && (
+            <div className="absolute right-0 top-11 w-60 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-slate-100">
+                <p className="text-sm font-bold text-slate-800 truncate">{displayName}</p>
+                <p className="text-xs text-slate-400">{roleName}</p>
+              </div>
+              <button
+                onClick={() => { setAccountOpen(false); setShowNickModal(true) }}
+                className="w-full flex items-center gap-2 px-4 py-3 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Pencil className="w-4 h-4 text-slate-400" />
+                Edit Nama Panggilan
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>
+    <EditNicknameModal open={showNickModal} onClose={() => setShowNickModal(false)} />
     </>
   )
 }
