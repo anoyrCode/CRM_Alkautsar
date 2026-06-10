@@ -29,3 +29,9 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Claude / AI tooling (keep local, not in repo)
+CLAUDE.md
+.superpowers/
+docs/superpowers/
+.claude/
