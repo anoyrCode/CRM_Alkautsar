@@ -30,7 +30,7 @@ dist-ssr
 
 .vercel
 
-# Claude / AI tooling (keep local, not in repo)
+# Local development files
 CLAUDE.md
 .superpowers/
 docs/superpowers/
