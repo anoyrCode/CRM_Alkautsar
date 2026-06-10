@@ -30,6 +30,9 @@ dist-ssr
 
 .vercel
 
+dev-dist/
+preview-*.html
+
 # Local development files
 CLAUDE.md
 .superpowers/
