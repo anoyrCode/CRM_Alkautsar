@@ -135,6 +135,23 @@ export default function ComplaintThread({ complaintId, currentUser }) {
                     {isSelf ? 'Anda' : (msg.senderName ?? '—')} · {time}
                   </p>
 
+                  {isSelf && !isEditing && (
+                    <div className="flex gap-2 mt-0.5 px-1">
+                      <button
+                        onClick={() => { setEditingId(msg.id); setEditBody(msg.body) }}
+                        className="flex items-center gap-0.5 text-[10px] text-slate-400 hover:text-sky-500 transition-colors"
+                      >
+                        <Pencil className="w-2.5 h-2.5" />Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(msg.id)}
+                        className="flex items-center gap-0.5 text-[10px] text-slate-400 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 className="w-2.5 h-2.5" />Hapus
+                      </button>
+                    </div>
+                  )}
+
                   {isEditing ? (
                     <div className="flex flex-col items-end gap-1.5 w-full max-w-[80%]">
                       <textarea
@@ -159,30 +176,12 @@ export default function ComplaintThread({ complaintId, currentUser }) {
                       </div>
                     </div>
                   ) : (
-                    <div className={`group relative max-w-[80%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                    <div className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                       isSelf
                         ? 'bg-sky-500 text-white rounded-2xl rounded-tr-sm'
                         : 'bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm'
                     }`}>
                       {msg.body}
-                      {isSelf && (
-                        <div className="absolute -bottom-5 right-0 hidden group-hover:flex gap-1">
-                          <button
-                            onClick={() => { setEditingId(msg.id); setEditBody(msg.body) }}
-                            className="w-5 h-5 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-colors shadow-sm"
-                            title="Edit"
-                          >
-                            <Pencil className="w-2.5 h-2.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(msg.id)}
-                            className="w-5 h-5 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-300 transition-colors shadow-sm"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>
