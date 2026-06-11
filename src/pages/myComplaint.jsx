@@ -9,6 +9,7 @@ import EditComplaintModal from '../components/EditComplaintModal'
 import DeleteComplaintModal from '../components/DeleteComplaintModal'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import ComplaintThread from '../components/ComplaintThread'
 
 const STATUS_STYLES = {
   Selesai:  { bg: 'bg-emerald-100 text-emerald-700', icon: CircleCheckBig },
@@ -50,7 +51,7 @@ const FILTERS = [
   ]},
 ]
 
-function DetailModal({ complaint, onClose }) {
+function DetailModal({ complaint, onClose, currentUser }) {
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <motion.div
@@ -141,6 +142,8 @@ function DetailModal({ complaint, onClose }) {
               }
             </p>
           </div>
+
+          <ComplaintThread complaintId={complaint.id} currentUser={currentUser} />
         </div>
 
         <div className="px-5 py-4 border-t border-slate-100 shrink-0">
@@ -165,6 +168,7 @@ function MyComplaint() {
   const [editTarget,   setEditTarget]   = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [detailTarget, setDetailTarget] = useState(null)
+  const [unreadMap,    setUnreadMap]    = useState({})
 
   useEffect(() => {
     if (!profile?.id) return
@@ -177,6 +181,22 @@ function MyComplaint() {
         .order('created_at', { ascending: false })
       setComplaints(data ?? [])
       setFetching(false)
+
+      if (!data?.length) return
+      const ids = data.map(c => c.id)
+      const [{ data: msgs }, { data: reads }] = await Promise.all([
+        supabase.from('complaint_messages').select('complaint_id, created_at').in('complaint_id', ids),
+        supabase.from('complaint_message_reads').select('complaint_id, last_read_at').eq('user_id', profile.id),
+      ])
+      const readMap = Object.fromEntries((reads ?? []).map(r => [r.complaint_id, r.last_read_at]))
+      const newUnread = {}
+      for (const msg of (msgs ?? [])) {
+        const lastRead = readMap[msg.complaint_id]
+        if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
+          newUnread[msg.complaint_id] = (newUnread[msg.complaint_id] ?? 0) + 1
+        }
+      }
+      setUnreadMap(newUnread)
     }
     fetch()
   }, [profile?.id])
@@ -224,11 +244,16 @@ function MyComplaint() {
       return (
         <div className="flex gap-1.5">
           <button
-            onClick={() => setDetailTarget(row)}
-            className="w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
+            onClick={() => { setDetailTarget(row); setUnreadMap(prev => ({ ...prev, [row.id]: 0 })) }}
+            className="relative w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
             title="Lihat Detail"
           >
             <FileText className="w-3.5 h-3.5 text-slate-500" />
+            {!!unreadMap[row.id] && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+                {unreadMap[row.id] > 9 ? '9+' : unreadMap[row.id]}
+              </span>
+            )}
           </button>
           {editable && (
             <>
@@ -293,6 +318,7 @@ function MyComplaint() {
           <DetailModal
             complaint={detailTarget}
             onClose={() => setDetailTarget(null)}
+            currentUser={profile}
           />
         )}
       </AnimatePresence>
