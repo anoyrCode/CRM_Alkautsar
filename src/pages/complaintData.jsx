@@ -9,6 +9,7 @@ import EditComplaintModal from '../components/EditComplaintModal'
 import DeleteComplaintModal from '../components/DeleteComplaintModal'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import ComplaintThread from '../components/ComplaintThread'
 
 const STATUS_STYLES = {
   Selesai:  { bg: 'bg-emerald-100 text-emerald-700', icon: CircleCheckBig },
@@ -109,7 +110,7 @@ function formatSize(bytes) {
   return (bytes / 1048576).toFixed(1) + ' MB'
 }
 
-function DetailModal({ complaint, onClose }) {
+function DetailModal({ complaint, onClose, currentUser }) {
   const divisionName = complaint.categories?.assigned_role?.name ?? '—'
   const [attachments, setAttachments] = useState([])
   const [loadingAtt,  setLoadingAtt]  = useState(true)
@@ -252,6 +253,8 @@ function DetailModal({ complaint, onClose }) {
               <p className="text-sm font-bold text-sky-700">{divisionName}</p>
             </div>
           </div>
+
+          <ComplaintThread complaintId={complaint.id} currentUser={currentUser} />
         </div>
 
         {/* Footer */}
@@ -381,6 +384,7 @@ function CompliantData() {
   const [fetching,       setFetching]       = useState(true)
   const [editComplaint,  setEditComplaint]  = useState(null)
   const [detailComplaint, setDetailComplaint] = useState(null)
+  const [unreadMap,       setUnreadMap]       = useState({})
   const [editFull,       setEditFull]       = useState(null)
   const [deleteTarget,   setDeleteTarget]   = useState(null)
   const [search,         setSearch]         = useState('')
@@ -392,41 +396,59 @@ function CompliantData() {
     if (!profile) return
     const load = async () => {
       setFetching(true)
-      const perms     = profile.roles?.permissions ?? []
-      const isAdmin   = perms.includes('komplain_semua')
-      const isDivisi  = perms.includes('komplain_diterima')
+      try {
+        const perms     = profile.roles?.permissions ?? []
+        const isAdmin   = perms.includes('komplain_semua')
+        const isDivisi  = perms.includes('komplain_diterima')
 
-      // Tidak punya permission komplain apapun → kosong
-      if (!isAdmin && !isDivisi) {
-        setComplaints([])
-        setFetching(false)
-        return
-      }
-
-      let query = supabase
-        .from('complaints')
-        .select('*, reporter:profiles!reporter_id(full_name), categories(name, assigned_role:roles!assigned_role_id(name))')
-        .order('created_at', { ascending: false })
-
-      // Divisi lihat semua komplain yang kategorinya ditujukan ke role mereka
-      if (!isAdmin && isDivisi) {
-        const { data: cats } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('assigned_role_id', profile.role_id)
-        const catIds = cats?.map(c => c.id) ?? []
-        if (catIds.length === 0) {
+        // Tidak punya permission komplain apapun → kosong
+        if (!isAdmin && !isDivisi) {
           setComplaints([])
-          setFetching(false)
           return
         }
-        query = query.in('category_id', catIds)
-      }
 
-      const { data, error } = await query
-      if (error) console.error('complaintData fetch error:', error)
-      setComplaints(data ?? [])
-      setFetching(false)
+        let query = supabase
+          .from('complaints')
+          .select('*, reporter:profiles!reporter_id(full_name), categories(name, assigned_role:roles!assigned_role_id(name))')
+          .order('created_at', { ascending: false })
+
+        // Divisi lihat semua komplain yang kategorinya ditujukan ke role mereka
+        if (!isAdmin && isDivisi) {
+          const { data: cats } = await supabase
+            .from('categories')
+            .select('id')
+            .eq('assigned_role_id', profile.role_id)
+          const catIds = cats?.map(c => c.id) ?? []
+          if (catIds.length === 0) {
+            setComplaints([])
+            return
+          }
+          query = query.in('category_id', catIds)
+        }
+
+        const { data, error } = await query
+        if (error) console.error('complaintData fetch error:', error)
+        setComplaints(data ?? [])
+
+        if (data?.length) {
+          const ids = data.map(c => c.id)
+          const [{ data: msgs }, { data: reads }] = await Promise.all([
+            supabase.from('complaint_messages').select('complaint_id, created_at').in('complaint_id', ids).neq('sender_id', profile.id),
+            supabase.from('complaint_message_reads').select('complaint_id, last_read_at').eq('user_id', profile.id),
+          ])
+          const readMap = Object.fromEntries((reads ?? []).map(r => [r.complaint_id, r.last_read_at]))
+          const newUnread = {}
+          for (const msg of (msgs ?? [])) {
+            const lastRead = readMap[msg.complaint_id]
+            if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
+              newUnread[msg.complaint_id] = (newUnread[msg.complaint_id] ?? 0) + 1
+            }
+          }
+          setUnreadMap(newUnread)
+        }
+      } finally {
+        setFetching(false)
+      }
     }
     load()
   }, [profile])
@@ -486,11 +508,16 @@ function CompliantData() {
     { key: 'aksi', label: 'Aksi', render: (_, row) => (
       <div className="flex gap-1.5">
         <button
-          onClick={() => setDetailComplaint(row)}
-          className="w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
+          onClick={() => { setDetailComplaint(row); setUnreadMap(prev => ({ ...prev, [row.id]: 0 })) }}
+          className="relative w-7 h-7 bg-slate-50 hover:bg-slate-100 rounded-lg flex items-center justify-center transition-colors"
           title="Lihat Detail"
         >
           <FileText className="w-3.5 h-3.5 text-slate-500" />
+          {!!unreadMap[row.id] && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+              {unreadMap[row.id] > 9 ? '9+' : unreadMap[row.id]}
+            </span>
+          )}
         </button>
         <button
           onClick={() => setEditComplaint(row)}
@@ -556,6 +583,7 @@ function CompliantData() {
           <DetailModal
             complaint={detailComplaint}
             onClose={() => setDetailComplaint(null)}
+            currentUser={profile}
           />
         )}
       </AnimatePresence>
