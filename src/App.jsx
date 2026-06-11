@@ -9,6 +9,7 @@ import RouteConfig from './routes/routeConfig'
 import Login from './pages/auth/Login'
 import ResetPassword from './pages/auth/ResetPassword'
 import InstallPrompt from './components/InstallPrompt'
+import FeatureAnnouncementModal from './components/FeatureAnnouncementModal'
 import usePushNotification from './hooks/usePushNotification'
 import { supabase } from './lib/supabase'
 
@@ -54,6 +55,7 @@ function AppLayout() {
           <RouteConfig />
         </main>
       </div>
+      <FeatureAnnouncementModal />
     </div>
   )
 }
