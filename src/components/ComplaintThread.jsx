@@ -14,10 +14,22 @@ export default function ComplaintThread({ complaintId, currentUser }) {
     setLoading(true)
     const { data, error } = await supabase
       .from('complaint_messages')
-      .select('id, body, created_at, sender_id, profiles(full_name)')
+      .select('id, body, created_at, sender_id')
       .eq('complaint_id', complaintId)
       .order('created_at', { ascending: true })
-    setMessages(data ?? [])
+
+    if (!error && data?.length) {
+      const senderIds = [...new Set(data.map(m => m.sender_id))]
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, full_name')
+        .in('id', senderIds)
+      const profMap = Object.fromEntries((profs ?? []).map(p => [p.id, p.full_name]))
+      setMessages(data.map(m => ({ ...m, senderName: profMap[m.sender_id] ?? '—' })))
+    } else {
+      setMessages(data ?? [])
+    }
+
     setLoading(false)
     if (!error) {
       await supabase
@@ -42,10 +54,10 @@ export default function ComplaintThread({ complaintId, currentUser }) {
     const { data, error } = await supabase
       .from('complaint_messages')
       .insert({ complaint_id: complaintId, sender_id: currentUser.id, body: body.trim() })
-      .select('id, body, created_at, sender_id, profiles(full_name)')
+      .select('id, body, created_at, sender_id')
       .single()
     if (!error && data) {
-      setMessages(prev => [...prev, data])
+      setMessages(prev => [...prev, { ...data, senderName: currentUser.full_name }])
       setBody('')
     } else if (error) {
       console.error('[ComplaintThread] send error:', error)
@@ -77,7 +89,6 @@ export default function ComplaintThread({ complaintId, currentUser }) {
         </button>
       </div>
 
-      {/* Daftar pesan */}
       <div className="bg-slate-50 rounded-xl p-3 flex flex-col gap-2 min-h-[100px] max-h-[220px] overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center gap-2 py-6 text-xs text-slate-400">
@@ -96,7 +107,7 @@ export default function ComplaintThread({ complaintId, currentUser }) {
               return (
                 <div key={msg.id} className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'}`}>
                   <p className="text-[10px] text-slate-400 mb-0.5 px-1">
-                    {isSelf ? 'Anda' : (msg.profiles?.full_name ?? '—')} · {time}
+                    {isSelf ? 'Anda' : (msg.senderName ?? '—')} · {time}
                   </p>
                   <div className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
                     isSelf
@@ -113,7 +124,6 @@ export default function ComplaintThread({ complaintId, currentUser }) {
         )}
       </div>
 
-      {/* Input */}
       {sendError && (
         <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1.5">{sendError}</p>
       )}
