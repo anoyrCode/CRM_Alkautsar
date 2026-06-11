@@ -3,10 +3,11 @@ import { Send, RefreshCw, MessageSquare } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function ComplaintThread({ complaintId, currentUser }) {
-  const [messages, setMessages] = useState([])
-  const [loading,  setLoading]  = useState(true)
-  const [body,     setBody]     = useState('')
-  const [sending,  setSending]  = useState(false)
+  const [messages,  setMessages]  = useState([])
+  const [loading,   setLoading]   = useState(true)
+  const [body,      setBody]      = useState('')
+  const [sending,   setSending]   = useState(false)
+  const [sendError, setSendError] = useState('')
   const bottomRef = useRef(null)
 
   const fetchMessages = useCallback(async () => {
@@ -37,6 +38,7 @@ export default function ComplaintThread({ complaintId, currentUser }) {
   const handleSend = async () => {
     if (!body.trim() || sending) return
     setSending(true)
+    setSendError('')
     const { data, error } = await supabase
       .from('complaint_messages')
       .insert({ complaint_id: complaintId, sender_id: currentUser.id, body: body.trim() })
@@ -45,6 +47,9 @@ export default function ComplaintThread({ complaintId, currentUser }) {
     if (!error && data) {
       setMessages(prev => [...prev, data])
       setBody('')
+    } else if (error) {
+      console.error('[ComplaintThread] send error:', error)
+      setSendError(error.message)
     }
     setSending(false)
   }
@@ -109,6 +114,9 @@ export default function ComplaintThread({ complaintId, currentUser }) {
       </div>
 
       {/* Input */}
+      {sendError && (
+        <p className="mt-2 text-xs text-red-500 bg-red-50 rounded-lg px-3 py-1.5">{sendError}</p>
+      )}
       <div className="flex gap-2 mt-2">
         <textarea
           value={body}
