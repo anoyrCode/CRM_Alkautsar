@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, RefreshCw, MessageSquare } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
@@ -9,24 +9,26 @@ export default function ComplaintThread({ complaintId, currentUser }) {
   const [sending,  setSending]  = useState(false)
   const bottomRef = useRef(null)
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     setLoading(true)
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('complaint_messages')
       .select('id, body, created_at, sender_id, profiles(full_name)')
       .eq('complaint_id', complaintId)
       .order('created_at', { ascending: true })
     setMessages(data ?? [])
     setLoading(false)
-    await supabase
-      .from('complaint_message_reads')
-      .upsert(
-        { user_id: currentUser.id, complaint_id: complaintId, last_read_at: new Date().toISOString() },
-        { onConflict: 'user_id,complaint_id' }
-      )
-  }
+    if (!error) {
+      await supabase
+        .from('complaint_message_reads')
+        .upsert(
+          { user_id: currentUser.id, complaint_id: complaintId, last_read_at: new Date().toISOString() },
+          { onConflict: 'user_id,complaint_id' }
+        )
+    }
+  }, [complaintId, currentUser.id])
 
-  useEffect(() => { fetchMessages() }, [complaintId])
+  useEffect(() => { fetchMessages() }, [fetchMessages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -119,6 +121,7 @@ export default function ComplaintThread({ complaintId, currentUser }) {
         <button
           onClick={handleSend}
           disabled={!body.trim() || sending}
+          aria-label="Kirim pesan"
           className="w-9 h-9 bg-sky-500 hover:bg-sky-600 text-white rounded-xl flex items-center justify-center transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0 self-end"
         >
           {sending
