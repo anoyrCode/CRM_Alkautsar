@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, RefreshCw, MessageSquare } from 'lucide-react'
+import { Send, RefreshCw, MessageSquare, Pencil, Trash2, Check, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function ComplaintThread({ complaintId, currentUser }) {
@@ -8,6 +8,8 @@ export default function ComplaintThread({ complaintId, currentUser }) {
   const [body,      setBody]      = useState('')
   const [sending,   setSending]   = useState(false)
   const [sendError, setSendError] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editBody,  setEditBody]  = useState('')
   const bottomRef = useRef(null)
 
   const fetchMessages = useCallback(async () => {
@@ -66,6 +68,28 @@ export default function ComplaintThread({ complaintId, currentUser }) {
     setSending(false)
   }
 
+  const handleSaveEdit = async (id) => {
+    if (!editBody.trim()) return
+    const { error } = await supabase
+      .from('complaint_messages')
+      .update({ body: editBody.trim() })
+      .eq('id', id)
+    if (!error) {
+      setMessages(prev => prev.map(m => m.id === id ? { ...m, body: editBody.trim() } : m))
+      setEditingId(null)
+    }
+  }
+
+  const handleDelete = async (id) => {
+    const { error } = await supabase
+      .from('complaint_messages')
+      .delete()
+      .eq('id', id)
+    if (!error) {
+      setMessages(prev => prev.filter(m => m.id !== id))
+    }
+  }
+
   const handleKeyDown = e => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -102,20 +126,65 @@ export default function ComplaintThread({ complaintId, currentUser }) {
         ) : (
           <>
             {messages.map(msg => {
-              const isSelf = msg.sender_id === currentUser.id
-              const time   = new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+              const isSelf   = msg.sender_id === currentUser.id
+              const isEditing = editingId === msg.id
+              const time     = new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
               return (
                 <div key={msg.id} className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'}`}>
                   <p className="text-[10px] text-slate-400 mb-0.5 px-1">
                     {isSelf ? 'Anda' : (msg.senderName ?? '—')} · {time}
                   </p>
-                  <div className={`max-w-[80%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
-                    isSelf
-                      ? 'bg-sky-500 text-white rounded-2xl rounded-tr-sm'
-                      : 'bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm'
-                  }`}>
-                    {msg.body}
-                  </div>
+
+                  {isEditing ? (
+                    <div className="flex flex-col items-end gap-1.5 w-full max-w-[80%]">
+                      <textarea
+                        value={editBody}
+                        onChange={e => setEditBody(e.target.value)}
+                        rows={2}
+                        className="w-full resize-none text-sm border border-sky-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-300 bg-white text-slate-700"
+                      />
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => handleSaveEdit(msg.id)}
+                          className="flex items-center gap-1 text-xs bg-sky-500 hover:bg-sky-600 text-white px-2.5 py-1 rounded-lg transition-colors"
+                        >
+                          <Check className="w-3 h-3" />Simpan
+                        </button>
+                        <button
+                          onClick={() => setEditingId(null)}
+                          className="flex items-center gap-1 text-xs border border-slate-200 text-slate-500 hover:bg-slate-100 px-2.5 py-1 rounded-lg transition-colors"
+                        >
+                          <X className="w-3 h-3" />Batal
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={`group relative max-w-[80%] px-3 py-2 text-sm leading-relaxed whitespace-pre-wrap ${
+                      isSelf
+                        ? 'bg-sky-500 text-white rounded-2xl rounded-tr-sm'
+                        : 'bg-white border border-slate-200 text-slate-700 rounded-2xl rounded-tl-sm'
+                    }`}>
+                      {msg.body}
+                      {isSelf && (
+                        <div className="absolute -bottom-5 right-0 hidden group-hover:flex gap-1">
+                          <button
+                            onClick={() => { setEditingId(msg.id); setEditBody(msg.body) }}
+                            className="w-5 h-5 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-400 hover:text-sky-500 hover:border-sky-300 transition-colors shadow-sm"
+                            title="Edit"
+                          >
+                            <Pencil className="w-2.5 h-2.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(msg.id)}
+                            className="w-5 h-5 bg-white border border-slate-200 rounded-md flex items-center justify-center text-slate-400 hover:text-red-500 hover:border-red-300 transition-colors shadow-sm"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })}
