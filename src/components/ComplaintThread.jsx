@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, RefreshCw, MessageSquare, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Send, RefreshCw, MessageSquare, Pencil, Trash2, Check, CheckCheck, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 
 export default function ComplaintThread({ complaintId, currentUser }) {
@@ -10,6 +10,7 @@ export default function ComplaintThread({ complaintId, currentUser }) {
   const [sendError, setSendError] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editBody,  setEditBody]  = useState('')
+  const [otherLastRead, setOtherLastRead] = useState(null)
   const bottomRef = useRef(null)
 
   const fetchMessages = useCallback(async () => {
@@ -34,6 +35,17 @@ export default function ComplaintThread({ complaintId, currentUser }) {
 
     setLoading(false)
     if (!error) {
+      // Kapan terakhir pihak LAIN membuka thread ini (untuk status "Dibaca" di pesan sendiri)
+      const { data: reads } = await supabase
+        .from('complaint_message_reads')
+        .select('last_read_at')
+        .eq('complaint_id', complaintId)
+        .neq('user_id', currentUser.id)
+      const latest = (reads ?? [])
+        .map(r => new Date(r.last_read_at).getTime())
+        .reduce((max, t) => Math.max(max, t), 0)
+      setOtherLastRead(latest > 0 ? latest : null)
+
       await supabase
         .from('complaint_message_reads')
         .upsert(
@@ -129,6 +141,7 @@ export default function ComplaintThread({ complaintId, currentUser }) {
               const isSelf   = msg.sender_id === currentUser.id
               const isEditing = editingId === msg.id
               const time     = new Date(msg.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+              const isRead   = isSelf && otherLastRead != null && new Date(msg.created_at).getTime() <= otherLastRead
               return (
                 <div key={msg.id} className={`flex flex-col ${isSelf ? 'items-end' : 'items-start'}`}>
                   <p className="text-[10px] text-slate-400 mb-0.5 px-1">
@@ -183,6 +196,15 @@ export default function ComplaintThread({ complaintId, currentUser }) {
                     }`}>
                       {msg.body}
                     </div>
+                  )}
+
+                  {isSelf && !isEditing && (
+                    <p className={`text-[10px] mt-0.5 px-1 flex items-center gap-0.5 ${isRead ? 'text-sky-500' : 'text-slate-400'}`}>
+                      {isRead
+                        ? <><CheckCheck className="w-3 h-3" />Dibaca</>
+                        : <><Check className="w-3 h-3" />Terkirim</>
+                      }
+                    </p>
                   )}
                 </div>
               )
