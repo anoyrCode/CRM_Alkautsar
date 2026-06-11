@@ -174,29 +174,33 @@ function MyComplaint() {
     if (!profile?.id) return
     const fetch = async () => {
       setFetching(true)
-      const { data } = await supabase
-        .from('complaints')
-        .select('*, categories(name)')
-        .eq('reporter_id', profile.id)
-        .order('created_at', { ascending: false })
-      setComplaints(data ?? [])
-      setFetching(false)
+      try {
+        const { data } = await supabase
+          .from('complaints')
+          .select('*, categories(name)')
+          .eq('reporter_id', profile.id)
+          .order('created_at', { ascending: false })
+        setComplaints(data ?? [])
 
-      if (!data?.length) return
-      const ids = data.map(c => c.id)
-      const [{ data: msgs }, { data: reads }] = await Promise.all([
-        supabase.from('complaint_messages').select('complaint_id, created_at').in('complaint_id', ids),
-        supabase.from('complaint_message_reads').select('complaint_id, last_read_at').eq('user_id', profile.id),
-      ])
-      const readMap = Object.fromEntries((reads ?? []).map(r => [r.complaint_id, r.last_read_at]))
-      const newUnread = {}
-      for (const msg of (msgs ?? [])) {
-        const lastRead = readMap[msg.complaint_id]
-        if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
-          newUnread[msg.complaint_id] = (newUnread[msg.complaint_id] ?? 0) + 1
+        if (data?.length) {
+          const ids = data.map(c => c.id)
+          const [{ data: msgs }, { data: reads }] = await Promise.all([
+            supabase.from('complaint_messages').select('complaint_id, created_at').in('complaint_id', ids).neq('sender_id', profile.id),
+            supabase.from('complaint_message_reads').select('complaint_id, last_read_at').eq('user_id', profile.id),
+          ])
+          const readMap = Object.fromEntries((reads ?? []).map(r => [r.complaint_id, r.last_read_at]))
+          const newUnread = {}
+          for (const msg of (msgs ?? [])) {
+            const lastRead = readMap[msg.complaint_id]
+            if (!lastRead || new Date(msg.created_at) > new Date(lastRead)) {
+              newUnread[msg.complaint_id] = (newUnread[msg.complaint_id] ?? 0) + 1
+            }
+          }
+          setUnreadMap(newUnread)
         }
+      } finally {
+        setFetching(false)
       }
-      setUnreadMap(newUnread)
     }
     fetch()
   }, [profile?.id])
